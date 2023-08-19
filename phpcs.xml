@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset name="XlsxFastEditor">
+	<arg name="extensions" value="php"/>
+	<arg name="tab-width" value="4"/>
+	<exclude-pattern>./vendor/</exclude-pattern>
+	<rule ref="PSR2">
+		<exclude name="Generic.WhiteSpace.DisallowTabIndent.NonIndentTabsUsed"/>
+		<exclude name="Generic.WhiteSpace.DisallowTabIndent.TabsUsed"/>
+	</rule>
+	<rule ref="PSR12"/>
+	<rule ref="Generic.Classes.DuplicateClassName"/>
+	<rule ref="Generic.CodeAnalysis.EmptyStatement"/>
+	<rule ref="Generic.CodeAnalysis.UnconditionalIfStatement"/>
+	<rule ref="Generic.CodeAnalysis.UnnecessaryFinalModifier"/>
+	<rule ref="Generic.CodeAnalysis.UselessOverridingMethod"/>
+	<rule ref="Generic.Files.LineLength">
+		<properties>
+			<property name="lineLimit" value="165"/>
+			<property name="absoluteLineLimit" value="190"/>
+		</properties>
+	</rule>
+	<rule ref="Generic.PHP.DeprecatedFunctions"/>
+	<rule ref="Generic.Strings.UnnecessaryStringConcat"/>
+	<rule ref="Generic.WhiteSpace.DisallowSpaceIndent"/>
+	<rule ref="Squiz.Classes.ClassFileName.NoMatch"/>
+	<rule ref="Squiz.Commenting.ClassComment.Missing"/>
+	<rule ref="Squiz.WhiteSpace.OperatorSpacing"/>
+	<rule ref="Squiz.WhiteSpace.SemicolonSpacing"/>
+</ruleset>

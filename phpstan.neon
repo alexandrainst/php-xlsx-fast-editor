@@ -1,0 +1,26 @@
+parameters:
+	level: 9
+	treatPhpDocTypesAsCertain: false
+	fileExtensions:
+		- php
+	paths:
+		- src/
+	excludePaths:
+		analyseAndScan:
+			- vendor/
+	strictRules:
+		allRules: false
+		booleansInConditions: true
+		closureUsesThis: true
+		disallowedConstructs: false
+		disallowedLooseComparison: false
+		matchingInheritedMethodNames: true
+		noVariableVariables: true
+		numericOperandsInArithmeticOperators: true
+		overwriteVariablesWithLoop: true
+		requireParentConstructorCall: true
+		strictCalls: true
+		switchConditionsMatchingType: true
+		uselessCast: true
+includes:
+	- vendor/phpstan/phpstan-strict-rules/rules.neon

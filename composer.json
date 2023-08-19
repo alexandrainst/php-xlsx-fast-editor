@@ -1,0 +1,67 @@
+{
+	"name": "alexandrainst/php-xlsx-fast-editor",
+	"version": "1.0.0",
+	"description": "PHP library to make basic and fast read-write operations on existing Excel workbooks",
+	"keywords": [
+		"PHP",
+		"OpenXML",
+		"Excel",
+		"xlsx",
+		"xlsm",
+		"spreadsheet",
+		"workbook",
+		"editor"
+	],
+	"homepage": "https://github.com/alexandrainst/php-xlsx-fast-editor",
+	"type": "library",
+	"license": "AGPL",
+	"authors": [
+		{
+			"name": "Alexandre Alapetite",
+			"homepage": "https://github.com/Alkarex",
+			"role": "Developer"
+		}
+	],
+	"require": {
+		"php": ">=7.4",
+		"ext-ctype": "*",
+		"ext-dom": "*",
+		"ext-xml": "*",
+		"ext-zip": "*"
+	},
+	"require-dev": {
+		"php": ">=8",
+		"ext-simplexml": "*",
+		"ext-tokenizer": "*",
+		"ext-xmlwriter": "*",
+		"phpstan/phpstan": "^1.10",
+		"phpstan/phpstan-strict-rules": "^1.5",
+		"squizlabs/php_codesniffer": "^3.7"
+	},
+	"scripts": {
+		"php-lint": "find . -type d -name 'vendor' -prune -o -name '*.php' -print0 | xargs -0 -n1 -P4 php -l 1>/dev/null",
+		"phpcs": "phpcs . -s",
+		"phpcbf": "phpcbf . -p -s",
+		"phpstan": "phpstan analyse --memory-limit 512M .",
+		"asserts": "php -d zend.assertions tests/test.php",
+		"test": [
+			"@php-lint",
+			"@phpcs",
+			"@phpstan",
+			"@asserts"
+		],
+		"fix": [
+			"@phpcbf"
+		]
+	},
+	"autoload": {
+		"psr-4": {
+			"alexandrainst\\XlsxFastEditor\\": "src/PhpSpreadsheet"
+		}
+	},
+	"config": {
+		"allow-plugins": {
+			"phpstan/extension-installer": false
+		}
+	}
+}
