@@ -14,7 +14,7 @@ but for simply reading & writing basic values from existing Excel workbooks, `Ph
 
 There are also libraries to create new Excel documents from scratch, or for just reading some values, but not any obvious one for editing.
 
-`php-xlsx-fast-editor` addresses the need of quickly reading and writing & editing existing Excel documents.
+`php-xlsx-fast-editor` addresses the need of quickly reading & writing & editing existing Excel documents.
 
 ## Use
 
@@ -43,9 +43,9 @@ $xlsxFastEditor = new XlsxFastEditor('test.xlsx');
 $worksheetId1 = $xlsxFastEditor->getWorksheetNumber('Sheet1');
 $worksheetId2 = $xlsxFastEditor->getWorksheetNumber('Sheet2');
 
-echo $xlsxFastEditor->readFloat($worksheetId1, 'B2'), "\n";
-echo $xlsxFastEditor->readInt($worksheetId1, 'C3'), "\n";
-echo $xlsxFastEditor->readString($worksheetId2, 'D4'), "\n";
+$f = $xlsxFastEditor->readFloat($worksheetId1, 'B2');
+$c = $xlsxFastEditor->readInt($worksheetId1, 'C3');
+$i = $xlsxFastEditor->readString($worksheetId2, 'D4');
 
 // If you want to force Excel to recalculate formulas on next load:
 $xlsxFastEditor->setFullCalcOnLoad($worksheetId2, true);
