@@ -1,6 +1,5 @@
 {
 	"name": "alexandrainst/php-xlsx-fast-editor",
-	"version": "1.0.0",
 	"description": "PHP library to make basic and fast read-write operations on existing Excel workbooks",
 	"keywords": [
 		"PHP",
@@ -14,7 +13,7 @@
 	],
 	"homepage": "https://github.com/alexandrainst/php-xlsx-fast-editor",
 	"type": "library",
-	"license": "AGPL",
+	"license": "AGPL-3.0-or-later",
 	"authors": [
 		{
 			"name": "Alexandre Alapetite",
@@ -30,7 +29,6 @@
 		"ext-zip": "*"
 	},
 	"require-dev": {
-		"php": ">=8",
 		"ext-simplexml": "*",
 		"ext-tokenizer": "*",
 		"ext-xmlwriter": "*",
