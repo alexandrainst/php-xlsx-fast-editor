@@ -16,11 +16,26 @@ There are also libraries to create new Excel documents from scratch, or for just
 
 `php-xlsx-fast-editor` addresses the need of quickly reading and writing & editing existing Excel documents.
 
+## Use
+
+Via [Composer](https://packagist.org/packages/alexandrainst/php-xlsx-fast-editor):
+
+```sh
+composer require alexandrainst/php-xlsx-fast-editor
+```
+
+or manually:
+
+```php
+require 'vendor/alexandrainst/XlsxFastEditor/autoload.php';
+```
+
+
 ## Examples
 
 ```php
-// Use composer or load manually:
-require 'vendor/alexandrainst/XlsxFastEditor/autoload.php';
+<?php
+
 use alexandrainst\XlsxFastEditor\XlsxFastEditor;
 
 $xlsxFastEditor = new XlsxFastEditor('test.xlsx');
