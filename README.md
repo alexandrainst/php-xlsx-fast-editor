@@ -44,8 +44,8 @@ $worksheetId1 = $xlsxFastEditor->getWorksheetNumber('Sheet1');
 $worksheetId2 = $xlsxFastEditor->getWorksheetNumber('Sheet2');
 
 $f = $xlsxFastEditor->readFloat($worksheetId1, 'B2');
-$c = $xlsxFastEditor->readInt($worksheetId1, 'C3');
-$i = $xlsxFastEditor->readString($worksheetId2, 'D4');
+$i = $xlsxFastEditor->readInt($worksheetId1, 'C3');
+$s = $xlsxFastEditor->readString($worksheetId2, 'D4');
 
 // If you want to force Excel to recalculate formulas on next load:
 $xlsxFastEditor->setFullCalcOnLoad($worksheetId2, true);
