@@ -1,6 +1,6 @@
 {
 	"name": "alexandrainst/php-xlsx-fast-editor",
-	"description": "PHP library to make basic and fast read-write operations on existing Excel workbooks",
+	"description": "PHP library to make basic but fast read & write operations on existing Excel workbooks",
 	"keywords": [
 		"PHP",
 		"OpenXML",
@@ -60,6 +60,7 @@
 	"config": {
 		"allow-plugins": {
 			"phpstan/extension-installer": false
-		}
+		},
+		"sort-packages": true
 	}
 }

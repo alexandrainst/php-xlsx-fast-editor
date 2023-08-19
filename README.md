@@ -1,6 +1,6 @@
 # php-xlsx-fast-editor
 
-PHP library to make basic and fast read-write operations on existing Excel workbooks.
+PHP library to make basic but fast read & write operations on existing Excel workbooks.
 
 It handles XLSX/XLSM documents (Microsoft Excel 2007+, Office Open XML Workbook) using fast and simple low-level ZIP & XML manipulations,
 without requiring any library dependency.
