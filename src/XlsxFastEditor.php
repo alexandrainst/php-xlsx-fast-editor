@@ -157,6 +157,49 @@ final class XlsxFastEditor
 	}
 
 	/**
+	 * Access the DOMElement representing a cell formula `<f>` in the worksheet.
+	 *
+	 * @param int $sheetNumber Worksheet number (base 1)
+	 * @param $cellName Cell name such as `B4`
+	 */
+	private function getF(int $sheetNumber, string $cellName): ?\DOMElement
+	{
+		if (!ctype_alnum($cellName)) {
+			throw new XlsxFastEditorInputException("Invalid cell reference {$cellName}! ");
+		}
+		$cellName = strtoupper($cellName);
+
+		$dom = $this->getDomFromPath(self::getWorksheetPath($sheetNumber));
+		$xpath = new \DOMXPath($dom);
+		$xpath->registerNamespace('o', self::OXML_NAMESPACE);
+
+		$f = null;
+		$fs = $xpath->query("(//o:c[@r='$cellName'])[1]/o:f");
+		if ($fs !== false && $fs->length > 0) {
+			$f = $fs[0];
+			if (!($f instanceof \DOMElement)) {
+				throw new XlsxFastEditorXmlException("Error querying XML fragment for cell formula {$sheetNumber}/{$cellName}!");
+			}
+		}
+		return $f;
+	}
+
+	/**
+	 * Read a formula in the given worksheet at the given cell location.
+	 *
+	 * @param int $sheetNumber Worksheet number (base 1)
+	 * @param $cellName Cell name such as `B4`
+	 */
+	public function readFormula(int $sheetNumber, string $cellName): ?string
+	{
+		$f = $this->getF($sheetNumber, $cellName);
+		if ($f === null || !is_string($f->nodeValue) || $f->nodeValue === '') {
+			return null;
+		}
+		return '=' . $f->nodeValue;
+	}
+
+	/**
 	 * Access the DOMElement representing a cell value `<v>` in the worksheet.
 	 *
 	 * @param int $sheetNumber Worksheet number (base 1)
@@ -172,11 +215,6 @@ final class XlsxFastEditor
 		$dom = $this->getDomFromPath(self::getWorksheetPath($sheetNumber));
 		$xpath = new \DOMXPath($dom);
 		$xpath->registerNamespace('o', self::OXML_NAMESPACE);
-
-		if (!ctype_alnum($cellName)) {
-			throw new XlsxFastEditorInputException("Invalid cell reference {$cellName}! ");
-		}
-		$cellName = strtoupper($cellName);
 
 		$v = null;
 		$vs = $xpath->query("(//o:c[@r='$cellName'])[1]/o:v");
@@ -436,6 +474,49 @@ final class XlsxFastEditor
 		}
 
 		return $v;
+	}
+
+	/**
+	 * Write a formulat in the given worksheet at the given cell location, without changing the type/style of the cell.
+	 * Removes the formulas of the cell, if any.
+	 *
+	 * @param int $sheetNumber Worksheet number (base 1)
+	 * @param $cellName Cell name such as `B4`
+	 */
+	public function writeFormula(int $sheetNumber, string $cellName, string $value): void
+	{
+		$c = $this->getCell($sheetNumber, $cellName, true);
+		if ($c === null) {
+			throw new XlsxFastEditorInputException("Internal error accessing cell {$sheetNumber}/{$cellName}!");
+		}
+
+		$value = ltrim($value, '=');
+
+		$vs = $c->getElementsByTagName('v');
+		for ($i = $vs->length - 1; $i >= 0; $i--) {
+			$v = $vs[$i];
+			if ($v instanceof \DOMElement) {
+				$c->removeChild($v);
+			}
+		}
+
+		$fs = $c->getElementsByTagName('f');
+		for ($i = $fs->length - 1; $i >= 0; $i--) {
+			$f = $fs[$i];
+			if ($f instanceof \DOMElement) {
+				$c->removeChild($f);
+			}
+		}
+
+		$dom = $c->ownerDocument;
+		if ($dom === null) {
+			throw new XlsxFastEditorInputException("Internal error accessing cell {$sheetNumber}/{$cellName}!");
+		}
+		$f = $dom->createElement('f', $value);
+		$c->appendChild($f);
+
+		$this->mustClearCalcChain = true;
+		$this->touchWorksheet($sheetNumber);
 	}
 
 	/**

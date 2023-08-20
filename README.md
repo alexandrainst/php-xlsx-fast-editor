@@ -3,18 +3,22 @@
 PHP library to make basic but fast read & write operations on existing Excel workbooks.
 
 It handles XLSX/XLSM documents (Microsoft Excel 2007+, Office Open XML Workbook) using fast and simple low-level ZIP & XML manipulations,
-without requiring any library dependency.
+without requiring any library dependency, while minimising unintended side-effects.
 
 ## Rationale
 
-If you need advanced manipulation of Excel documents such as working with formulas and styles,
+If you need advanced manipulation of Excel documents such as working with styles,
 check the [PhpSpreadsheet](https://github.com/PHPOffice/PhpSpreadsheet) library
 (previously [PHPExcel](https://github.com/PHPOffice/PHPExcel/)),
-but for simply reading & writing basic values from existing Excel workbooks, `PhpSpreadsheet` is over an order of magnitude too slow.
+but for simply reading & writing basic values from existing Excel workbooks, `PhpSpreadsheet` is over an order of magnitude too slow,
+and has the risk of breaking some unsupported Excel features such as notes.
 
 There are also libraries to create new Excel documents from scratch, or for just reading some values, but not any obvious one for editing.
 
-`php-xlsx-fast-editor` addresses the need of quickly reading & writing & editing existing Excel documents.
+`php-xlsx-fast-editor` addresses the need of quickly reading & writing & editing existing Excel documents,
+while reducing the risk of breaking anything.
+
+Note that to create a new document, you can just provide a blank Excel document as input.
 
 ## Use
 
@@ -43,6 +47,7 @@ $xlsxFastEditor = new XlsxFastEditor('test.xlsx');
 $worksheetId1 = $xlsxFastEditor->getWorksheetNumber('Sheet1');
 $worksheetId2 = $xlsxFastEditor->getWorksheetNumber('Sheet2');
 
+$fx = $xlsxFastEditor->readFormula($worksheetId1, 'A1');
 $f = $xlsxFastEditor->readFloat($worksheetId1, 'B2');
 $i = $xlsxFastEditor->readInt($worksheetId1, 'C3');
 $s = $xlsxFastEditor->readString($worksheetId2, 'D4');
@@ -50,6 +55,7 @@ $s = $xlsxFastEditor->readString($worksheetId2, 'D4');
 // If you want to force Excel to recalculate formulas on next load:
 $xlsxFastEditor->setFullCalcOnLoad($worksheetId2, true);
 
+$xlsxFastEditor->writeFormula($worksheetId1, 'A1', '=B2*3');
 $xlsxFastEditor->writeFloat($worksheetId1, 'B2', 3.14);
 $xlsxFastEditor->writeInt($worksheetId1, 'C3', 13);
 $xlsxFastEditor->writeString($worksheetId2, 'D4', 'Hello');
