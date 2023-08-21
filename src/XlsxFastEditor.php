@@ -625,6 +625,7 @@ final class XlsxFastEditor
 		$sharedStringId = self::makeNewSharedString($value);
 		$v->nodeValue = (string)$sharedStringId;
 		$this->touchWorksheet($sheetNumber);
+		$this->touchPath(self::SHARED_STRINGS_PATH);
 	}
 
 	/**
