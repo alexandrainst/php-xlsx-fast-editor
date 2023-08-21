@@ -604,6 +604,8 @@ final class XlsxFastEditor
 
 		$uniqueCount = $dom->getElementsByTagName('si')->length;
 		$dom->firstElementChild->setAttribute('uniqueCount', (string)$uniqueCount);
+
+		$this->touchPath(self::SHARED_STRINGS_PATH);
 		return $uniqueCount - 1;	// Base 0
 	}
 
@@ -625,7 +627,6 @@ final class XlsxFastEditor
 		$sharedStringId = self::makeNewSharedString($value);
 		$v->nodeValue = (string)$sharedStringId;
 		$this->touchWorksheet($sheetNumber);
-		$this->touchPath(self::SHARED_STRINGS_PATH);
 	}
 
 	/**
