@@ -11,7 +11,7 @@ If you need advanced manipulation of Excel documents such as working with styles
 check the [PhpSpreadsheet](https://github.com/PHPOffice/PhpSpreadsheet) library
 (previously [PHPExcel](https://github.com/PHPOffice/PHPExcel/)),
 but for simply reading & writing basic values from existing Excel workbooks, `PhpSpreadsheet` is over an order of magnitude too slow,
-and has the risk of breaking some unsupported Excel features such as notes.
+and has the risk of breaking some unsupported Excel features such as some notes and charts.
 
 There are also libraries to create new Excel documents from scratch, or for just reading some values, but not any obvious one for editing.
 
@@ -49,14 +49,47 @@ try {
 	$worksheetId1 = $xlsxFastEditor->getWorksheetNumber('Sheet1');
 	$worksheetId2 = $xlsxFastEditor->getWorksheetNumber('Sheet2');
 
+	// Direct read access
 	$fx = $xlsxFastEditor->readFormula($worksheetId1, 'A1');
 	$f = $xlsxFastEditor->readFloat($worksheetId1, 'B2');
 	$i = $xlsxFastEditor->readInt($worksheetId1, 'C3');
 	$s = $xlsxFastEditor->readString($worksheetId2, 'D4');
 
+	// Navigation methods for existing rows
+	$row = $xlsxFastEditor->getFirstRow($worksheetId1);
+	$row = $xlsxFastEditor->getRow($worksheetId1, 2);
+	$row = $row->getPreviousRow();
+	$row = $row->getNextRow();
+	$row = $xlsxFastEditor->getLastRow($worksheetId1);
+
+	// Read methods for rows
+	$rowNumber = $row->number();
+
+	// Navigation methods for existing cells
+	$cell = $row->getFirstCell();
+	$cell = $row->getCell('D4');
+	$cell = $cell->getPreviousCell();
+	$cell = $cell->getNextCell();
+	$cell = $row->getLastCell();
+
+	// Read methods for cells
+	$cellName = $cell->name();
+	$fx = $cell->readFormula();
+	$f = $cell->readFloat();
+	$i = $cell->readInt();
+	$s = $cell->readString();
+
+	// Iterators for existing rows and cells
+	foreach ($xlsxFastEditor->rowsIterator($worksheetId1) as $row) {
+		foreach ($row->cellsIterator() as $cell) {
+			// $cell->...
+		}
+	}
+
 	// If you want to force Excel to recalculate formulas on next load:
 	$xlsxFastEditor->setFullCalcOnLoad($worksheetId2, true);
 
+	// Direct write access
 	$xlsxFastEditor->writeFormula($worksheetId1, 'A1', '=B2*3');
 	$xlsxFastEditor->writeFloat($worksheetId1, 'B2', 3.14);
 	$xlsxFastEditor->writeInt($worksheetId1, 'C3', 13);

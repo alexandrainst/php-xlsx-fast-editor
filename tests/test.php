@@ -2,7 +2,7 @@
 
 assert_options(ASSERT_ACTIVE, true);
 assert_options(ASSERT_BAIL, true);
-assert_options(ASSERT_EXCEPTION, false);
+assert_options(ASSERT_EXCEPTION, true);
 assert_options(ASSERT_WARNING, true);
 
 require(__DIR__ . '/../autoload.php');
@@ -35,34 +35,55 @@ try {
 	assert($xlsxFastEditor->readInt($sheet2, 'c3') === -5 * 2);
 	assert($xlsxFastEditor->readString($sheet2, 'B3') === 'déjà-vu');
 
-	// Existing cells
+	// Navigation
+	assert($xlsxFastEditor->getFirstRow($sheet1)?->number() === 1);
+	assert($xlsxFastEditor->getRow($sheet1, 1)?->getFirstCell()?->name() === 'A1');
+	assert($xlsxFastEditor->getRow($sheet1, 2)?->number() === 2);
+	assert($xlsxFastEditor->getRow($sheet1, 3)?->getLastCell()?->name() === 'D3');
+	assert($xlsxFastEditor->getRow($sheet1, 4)?->getCell('D4')?->name() === 'D4');
+	assert($xlsxFastEditor->getLastRow($sheet1)?->number() === 4);
+
+	// Iterators
+	$nb = 0;
+	foreach ($xlsxFastEditor->rowsIterator($sheet1) as $row) {
+		assert($row->number() > 0);
+		foreach ($row->cellsIterator() as $cell) {
+			assert($cell->name() !== null);
+			$nb++;
+		}
+	}
+	assert($nb === 16);
+
+	// Writing existing cells
 	$xlsxFastEditor->writeFormula($sheet1, 'c2', '=2*3');
 	$xlsxFastEditor->writeString($sheet1, 'b4', 'α');
 	$xlsxFastEditor->writeInt($sheet1, 'c4', 15);
 	$xlsxFastEditor->writeFloat($sheet1, 'd4', -66.6);
 
-	// Existing cells with formulas
+	// Writing existing cells with formulas
 	$xlsxFastEditor->writeFormula($sheet2, 'c2', '=Sheet1!C2*3');
 	$xlsxFastEditor->writeString($sheet2, 'B3', 'β');
 	$xlsxFastEditor->writeInt($sheet2, 'C3', -7);
 	$xlsxFastEditor->writeFloat($sheet2, 'D3', 273.15);
 
-	// Non-existing cells but existing lines
+	// Writing non-existing cells but existing lines
 	$xlsxFastEditor->writeFormula($sheet2, 'I2', '=7*3');
 	$xlsxFastEditor->writeString($sheet2, 'F2', 'γ');
 	$xlsxFastEditor->writeInt($sheet2, 'G3', -7);
 	$xlsxFastEditor->writeFloat($sheet2, 'H4', 273.15);
 
-	// Non-existing lines
+	// Writing non-existing lines
 	$xlsxFastEditor->writeFormula($sheet2, 'E11', '=7*5');
 	$xlsxFastEditor->writeString($sheet2, 'B10', 'δ');
 	$xlsxFastEditor->writeInt($sheet2, 'C9', 13);
 	$xlsxFastEditor->writeFloat($sheet2, 'D10', -273.15);
 
+	// Regex
 	assert($xlsxFastEditor->textReplace('/Hello/i', 'World') > 0);
 
 	$xlsxFastEditor->save();
 
+	// Verify all the changes
 	$xlsxFastEditor = new XlsxFastEditor(__DIR__ . '/copy.xlsx');
 
 	assert($xlsxFastEditor->readFormula($sheet1, 'c2') === '=2*3');

@@ -19,7 +19,7 @@ namespace alexandrainst\XlsxFastEditor;
  */
 final class XlsxFastEditor
 {
-	private const OXML_NAMESPACE = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
+	public const OXML_NAMESPACE = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
 
 	private const CALC_CHAIN_CACHE_PATH = 'xl/calcChain.xml';
 	private const SHARED_STRINGS_PATH = 'xl/sharedStrings.xml';
@@ -130,7 +130,7 @@ final class XlsxFastEditor
 		$dom = $this->getDomFromPath(self::WORKBOOK_PATH);
 		$xpath = new \DOMXPath($dom);
 		$xpath->registerNamespace('o', self::OXML_NAMESPACE);
-		$sheetId = $xpath->evaluate("normalize-space(//o:sheet[@name='$sheetName'][1]/@sheetId)");
+		$sheetId = $xpath->evaluate("normalize-space(/o:workbook/o:sheets/o:sheet[@name='$sheetName'][1]/@sheetId)");
 		if (is_string($sheetId)) {
 			return (int)$sheetId;
 		}
@@ -169,6 +169,95 @@ final class XlsxFastEditor
 	}
 
 	/**
+	 * Get the first existing row of the worksheet.
+	 * @param int $sheetNumber Worksheet number (base 1)
+	 * @return XlsxFastEditorRow|null The first row of the worksheet if there is any row, null otherwise.
+	 */
+	public function getFirstRow(int $sheetNumber): ?XlsxFastEditorRow
+	{
+		$dom = $this->getDomFromPath(self::getWorksheetPath($sheetNumber));
+		$xpath = new \DOMXPath($dom);
+		$xpath->registerNamespace('o', self::OXML_NAMESPACE);
+
+		$rs = $xpath->query("/o:worksheet/o:sheetData/o:row[position() = 1]");
+		if ($rs !== false && $rs->length > 0) {
+			$r = $rs[0];
+			if (!($r instanceof \DOMElement)) {
+				throw new XlsxFastEditorXmlException("Error querying XML fragment for row {$sheetNumber} of worksheet {$sheetNumber}!");
+			}
+			return new XlsxFastEditorRow($this, $r);
+		}
+		return null;
+	}
+
+	/**
+	 * Get the row of the given number in the given worksheet.
+	 * @param int $sheetNumber Worksheet number (base 1)
+	 * @param int $rowNumber Number (ID) of the row (base 1). Warning: this is not an index (not all rows necessarily exist in a sequence)
+	 * @return XlsxFastEditorRow|null The row of that number in that worksheet if it exists, null otherwise.
+	 */
+	public function getRow(int $sheetNumber, int $rowNumber): ?XlsxFastEditorRow
+	{
+		$dom = $this->getDomFromPath(self::getWorksheetPath($sheetNumber));
+		$xpath = new \DOMXPath($dom);
+		$xpath->registerNamespace('o', self::OXML_NAMESPACE);
+
+		$rs = $xpath->query("/o:worksheet/o:sheetData/o:row[@r='{$rowNumber}'][1]");
+		if ($rs !== false && $rs->length > 0) {
+			$r = $rs[0];
+			if (!($r instanceof \DOMElement)) {
+				throw new XlsxFastEditorXmlException("Error querying XML fragment for row {$sheetNumber} of worksheet {$sheetNumber}!");
+			}
+			return new XlsxFastEditorRow($this, $r);
+		}
+		return null;
+	}
+
+	/**
+	 * Get the last existing row of the worksheet.
+	 * @param int $sheetNumber Worksheet number (base 1)
+	 * @return XlsxFastEditorRow|null The last row of the worksheet if there is any row, null otherwise.
+	 */
+	public function getLastRow(int $sheetNumber): ?XlsxFastEditorRow
+	{
+		$dom = $this->getDomFromPath(self::getWorksheetPath($sheetNumber));
+		$xpath = new \DOMXPath($dom);
+		$xpath->registerNamespace('o', self::OXML_NAMESPACE);
+
+		$rs = $xpath->query("/o:worksheet/o:sheetData/o:row[position() = last()]");
+		if ($rs !== false && $rs->length > 0) {
+			$r = $rs[0];
+			if (!($r instanceof \DOMElement)) {
+				throw new XlsxFastEditorXmlException("Error querying XML fragment for row {$sheetNumber} of worksheet {$sheetNumber}!");
+			}
+			return new XlsxFastEditorRow($this, $r);
+		}
+		return null;
+	}
+
+	/**
+	 * To iterate over the all the rows of a given worksheet.
+	 * @return \Traversable<XlsxFastEditorRow>
+	 */
+	public function rowsIterator(int $sheetNumber): \Traversable
+	{
+		$dom = $this->getDomFromPath(self::getWorksheetPath($sheetNumber));
+		$xpath = new \DOMXPath($dom);
+		$xpath->registerNamespace('o', self::OXML_NAMESPACE);
+
+		$rs = $xpath->query("/o:worksheet/o:sheetData/o:row");
+		if ($rs !== false) {
+			for ($i = 0; $i < $rs->length; $i++) {
+				$r = $rs[$i];
+				if (!($r instanceof \DOMElement)) {
+					throw new XlsxFastEditorXmlException("Error querying XML fragment for row {$sheetNumber}!");
+				}
+				yield new XlsxFastEditorRow($this, $r);
+			}
+		}
+	}
+
+	/**
 	 * Access the DOMElement representing a cell formula `<f>` in the worksheet.
 	 *
 	 * @param int $sheetNumber Worksheet number (base 1)
@@ -186,7 +275,7 @@ final class XlsxFastEditor
 		$xpath->registerNamespace('o', self::OXML_NAMESPACE);
 
 		$f = null;
-		$fs = $xpath->query("(//o:c[@r='$cellName'])[1]/o:f");
+		$fs = $xpath->query("(/o:worksheet/o:sheetData/o:row/o:c[@r='$cellName'])[1]/o:f[1]");
 		if ($fs !== false && $fs->length > 0) {
 			$f = $fs[0];
 			if (!($f instanceof \DOMElement)) {
@@ -220,7 +309,7 @@ final class XlsxFastEditor
 	private function getV(int $sheetNumber, string $cellName): ?\DOMElement
 	{
 		if (!ctype_alnum($cellName)) {
-			throw new XlsxFastEditorInputException("Invalid cell reference {$cellName}! ");
+			throw new XlsxFastEditorInputException("Invalid cell reference {$cellName}!");
 		}
 		$cellName = strtoupper($cellName);
 
@@ -229,7 +318,7 @@ final class XlsxFastEditor
 		$xpath->registerNamespace('o', self::OXML_NAMESPACE);
 
 		$v = null;
-		$vs = $xpath->query("(//o:c[@r='$cellName'])[1]/o:v");
+		$vs = $xpath->query("(/o:worksheet/o:sheetData/o:row/o:c[@r='$cellName'])[1]/o:v[1]");
 		if ($vs !== false && $vs->length > 0) {
 			$v = $vs[0];
 			if (!($v instanceof \DOMElement)) {
@@ -270,6 +359,29 @@ final class XlsxFastEditor
 	}
 
 	/**
+	 * Access a string stored in the shared strings list.
+	 * @param int $stringNumber String number (ID), base 0.
+	 */
+	public function getSharedString(int $stringNumber): ?string
+	{
+		$dom = $this->getDomFromPath(self::SHARED_STRINGS_PATH);
+		$xpath = new \DOMXPath($dom);
+		$xpath->registerNamespace('o', self::OXML_NAMESPACE);
+
+		$stringNumber++;	// Base 1
+
+		$ts = $xpath->query("/o:sst/o:si[$stringNumber][1]/o:t[1]");
+		if ($ts !== false && $ts->length > 0) {
+			$t = $ts[0];
+			if (!($t instanceof \DOMElement)) {
+				throw new XlsxFastEditorXmlException("Error querying XML shared string {$stringNumber}!");
+			}
+			return $t->nodeValue;
+		}
+		return null;
+	}
+
+	/**
 	 * Read a string in the given worksheet at the given cell location,
 	 * compatible with the shared string approach.
 	 *
@@ -293,27 +405,11 @@ final class XlsxFastEditor
 			if (!ctype_digit($v->nodeValue)) {
 				throw new XlsxFastEditorXmlException("Error querying XML fragment for shared string {$sheetNumber}/{$cellName}!");
 			}
-
-			$sharedStringId = 1 + (int)$v->nodeValue;
-
-			$dom = $this->getDomFromPath(self::SHARED_STRINGS_PATH);
-			$xpath = new \DOMXPath($dom);
-			$xpath->registerNamespace('o', self::OXML_NAMESPACE);
-
-			$ts = $xpath->query("/o:sst/o:si[$sharedStringId]/o:t[1]");
-			if ($ts !== false && $ts->length > 0) {
-				$t = $ts[0];
-				if (!($t instanceof \DOMElement)) {
-					throw new XlsxFastEditorXmlException("Error querying XML shared string for {$sheetNumber}/{$cellName}!");
-				}
-				return $t->nodeValue;
-			}
+			return $this->getSharedString((int)$v->nodeValue);
 		} else {
 			// Local value
 			return $v->nodeValue;
 		}
-
-		return null;
 	}
 
 	/**
@@ -380,12 +476,12 @@ final class XlsxFastEditor
 		$xpath->registerNamespace('o', self::OXML_NAMESPACE);
 
 		if (!ctype_alnum($cellName)) {
-			throw new XlsxFastEditorInputException("Invalid cell reference {$cellName}! ");
+			throw new XlsxFastEditorInputException("Invalid cell reference {$cellName}!");
 		}
 		$cellName = strtoupper($cellName);
 
 		$c = null;
-		$cs = $xpath->query("(//o:c[@r='$cellName'])[1]");
+		$cs = $xpath->query("/o:worksheet/o:sheetData/o:row/o:c[@r='{$cellName}'][1]");
 		if ($cs !== false && $cs->length > 0) {
 			$c = $cs[0];
 			if (!($c instanceof \DOMElement)) {
@@ -402,7 +498,7 @@ final class XlsxFastEditor
 			}
 
 			$row = null;
-			$rows = $xpath->query("(//o:row[@r='$rowNumber'])[1]");
+			$rows = $xpath->query("/o:worksheet/o:sheetData/o:row[@r='{$rowNumber}'][1]");
 			if ($rows !== false && $rows->length > 0) {
 				$row = $rows[0];
 				if (!($row instanceof \DOMElement)) {
