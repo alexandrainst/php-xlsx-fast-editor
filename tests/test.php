@@ -75,6 +75,8 @@ try {
 	assert($xlsxFastEditor->readInt($sheet2, 'C3') === -7);
 	assert($xlsxFastEditor->readFloat($sheet2, 'D3') === 273.15);
 
+	$xlsxFastEditor->setFullCalcOnLoad($sheet2, true);
+
 	assert($xlsxFastEditor->readFormula($sheet2, 'I2') === '=7*3');
 	assert($xlsxFastEditor->readString($sheet2, 'F2') === 'γ');
 	assert($xlsxFastEditor->readInt($sheet2, 'G3') === -7);
