@@ -41,31 +41,36 @@ require 'vendor/alexandrainst/XlsxFastEditor/autoload.php';
 <?php
 
 use alexandrainst\XlsxFastEditor\XlsxFastEditor;
+use alexandrainst\XlsxFastEditor\XlsxFastEditorException;
 
-$xlsxFastEditor = new XlsxFastEditor('test.xlsx');
+try {
+	$xlsxFastEditor = new XlsxFastEditor('test.xlsx');
 
-$worksheetId1 = $xlsxFastEditor->getWorksheetNumber('Sheet1');
-$worksheetId2 = $xlsxFastEditor->getWorksheetNumber('Sheet2');
+	$worksheetId1 = $xlsxFastEditor->getWorksheetNumber('Sheet1');
+	$worksheetId2 = $xlsxFastEditor->getWorksheetNumber('Sheet2');
 
-$fx = $xlsxFastEditor->readFormula($worksheetId1, 'A1');
-$f = $xlsxFastEditor->readFloat($worksheetId1, 'B2');
-$i = $xlsxFastEditor->readInt($worksheetId1, 'C3');
-$s = $xlsxFastEditor->readString($worksheetId2, 'D4');
+	$fx = $xlsxFastEditor->readFormula($worksheetId1, 'A1');
+	$f = $xlsxFastEditor->readFloat($worksheetId1, 'B2');
+	$i = $xlsxFastEditor->readInt($worksheetId1, 'C3');
+	$s = $xlsxFastEditor->readString($worksheetId2, 'D4');
 
-// If you want to force Excel to recalculate formulas on next load:
-$xlsxFastEditor->setFullCalcOnLoad($worksheetId2, true);
+	// If you want to force Excel to recalculate formulas on next load:
+	$xlsxFastEditor->setFullCalcOnLoad($worksheetId2, true);
 
-$xlsxFastEditor->writeFormula($worksheetId1, 'A1', '=B2*3');
-$xlsxFastEditor->writeFloat($worksheetId1, 'B2', 3.14);
-$xlsxFastEditor->writeInt($worksheetId1, 'C3', 13);
-$xlsxFastEditor->writeString($worksheetId2, 'D4', 'Hello');
+	$xlsxFastEditor->writeFormula($worksheetId1, 'A1', '=B2*3');
+	$xlsxFastEditor->writeFloat($worksheetId1, 'B2', 3.14);
+	$xlsxFastEditor->writeInt($worksheetId1, 'C3', 13);
+	$xlsxFastEditor->writeString($worksheetId2, 'D4', 'Hello');
 
-// Regex search & replace operating globally on all the worksheets:
-$xlsxFastEditor->textReplace('/Hello/i', 'World');
+	// Regex search & replace operating globally on all the worksheets:
+	$xlsxFastEditor->textReplace('/Hello/i', 'World');
 
-$xlsxFastEditor->save();
-// If you do not want to save, call `close()` instead:
-// $xlsxFastEditor->close();
+	$xlsxFastEditor->save();
+	// If you do not want to save, call `close()` instead:
+	// $xlsxFastEditor->close();
+} catch (XlsxFastEditorException $xlsxe) {
+	die($xlsxe->getMessage());
+}
 ```
 
 ## Requirements

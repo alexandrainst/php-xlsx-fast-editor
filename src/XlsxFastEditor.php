@@ -1,17 +1,29 @@
 <?php
 
+/**
+ * PHP library to make basic but fast read & write operations on existing Excel workbooks.
+ * Originally written by [Alexandre Alapetite](https://github.com/Alkarex) for the [Alexandra Institute](https://alexandra.dk/), 2023.
+ *
+ * @author Alexandre Alapetite <alexandre.alapetite@alexandra.dk>
+ * @category PHP
+ * @license https://gnu.org/licenses/agpl.html GNU AGPL
+ * @link https://github.com/alexandrainst/php-xlsx-fast-editor
+ * @package XlsxFastEditor
+ */
+
 namespace alexandrainst\XlsxFastEditor;
 
 /**
- * Fast edit an existing XLSX/XLSM document (Microsoft Excel 2007+, Office Open XML Workbook)
+ * Main class to fast edit an existing XLSX/XLSM document (Microsoft Excel 2007+, Office Open XML Workbook)
  * using low-level ZIP and XML manipulation.
  */
 final class XlsxFastEditor
 {
 	private const OXML_NAMESPACE = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
+
+	private const CALC_CHAIN_CACHE_PATH = 'xl/calcChain.xml';
 	private const SHARED_STRINGS_PATH = 'xl/sharedStrings.xml';
 	private const WORKBOOK_PATH = 'xl/workbook.xml';
-	private const CALC_CHAIN_CACHE_PATH = 'xl/calcChain.xml';
 
 	private \ZipArchive $zip;
 
