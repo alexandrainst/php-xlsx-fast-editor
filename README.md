@@ -46,6 +46,9 @@ use alexandrainst\XlsxFastEditor\XlsxFastEditorException;
 try {
 	$xlsxFastEditor = new XlsxFastEditor('test.xlsx');
 
+	// Workbook / worksheet methods
+	$nbWorksheets = $xlsxFastEditor->getWorksheetCount();
+	$worksheetName = $xlsxFastEditor->getWorksheetName(1);
 	$worksheetId1 = $xlsxFastEditor->getWorksheetNumber('Sheet1');
 	$worksheetId2 = $xlsxFastEditor->getWorksheetNumber('Sheet2');
 

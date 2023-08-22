@@ -121,7 +121,19 @@ final class XlsxFastEditor
 	}
 
 	/**
-	 * Get a worksheet number (ID) from its name.
+	 * Count the number of worksheets in the workbook.
+	 */
+	public function getWorksheetCount(): int
+	{
+		$dom = $this->getDomFromPath(self::WORKBOOK_PATH);
+		$xpath = new \DOMXPath($dom);
+		$xpath->registerNamespace('o', self::OXML_NAMESPACE);
+		$count = $xpath->evaluate('count(/o:workbook/o:sheets/o:sheet)');
+		return is_numeric($count) ? (int)$count : 0;
+	}
+
+	/**
+	 * Get a worksheet number (ID) from its name (base 1).
 	 * @param string $sheetName The name of the worksheet to look up.
 	 * @return int The worksheet ID, or -1 if not found.
 	 */
@@ -135,6 +147,20 @@ final class XlsxFastEditor
 			return (int)$sheetId;
 		}
 		return -1;
+	}
+
+	/**
+	 * Get a worksheet name from its number (ID).
+	 * @param int $sheetNumber The number of the worksheet to look up.
+	 * @return string|null The worksheet name, or null if not found.
+	 */
+	public function getWorksheetName(int $sheetNumber): ?string
+	{
+		$dom = $this->getDomFromPath(self::WORKBOOK_PATH);
+		$xpath = new \DOMXPath($dom);
+		$xpath->registerNamespace('o', self::OXML_NAMESPACE);
+		$sheetName = $xpath->evaluate("normalize-space(/o:workbook/o:sheets/o:sheet[$sheetNumber][1]/@name)");
+		return is_string($sheetName) ? $sheetName : null;
 	}
 
 	private static function getWorksheetPath(int $sheetNumber): string

@@ -15,6 +15,8 @@ copy(__DIR__ . '/test.xlsx', __DIR__ . '/_copy.xlsx');
 try {
 	$xlsxFastEditor = new XlsxFastEditor(__DIR__ . '/_copy.xlsx');
 
+	assert($xlsxFastEditor->getWorksheetCount() === 2);
+
 	$sheet1 = $xlsxFastEditor->getWorksheetNumber('Sheet1');
 	assert($sheet1 === 1);
 
@@ -28,6 +30,7 @@ try {
 
 	$sheet2 = $xlsxFastEditor->getWorksheetNumber('Sheet2');
 	assert($sheet2 === 2);
+	assert($xlsxFastEditor->getWorksheetName($sheet2) === 'Sheet2');
 
 	assert($xlsxFastEditor->readFormula($sheet2, 'c2') === '=Sheet1!C2*2');
 	assert($xlsxFastEditor->readFloat($sheet2, 'D2') === 3.14159 * 2);
