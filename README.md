@@ -93,6 +93,7 @@ try {
 	$xlsxFastEditor->setFullCalcOnLoad($worksheetId2, true);
 
 	// Direct write access
+	$xlsxFastEditor->deleteRow($worksheetId1, 5);
 	$xlsxFastEditor->writeFormula($worksheetId1, 'A1', '=B2*3');
 	$xlsxFastEditor->writeFloat($worksheetId1, 'B2', 3.14);
 	$xlsxFastEditor->writeInt($worksheetId1, 'C3', 13);

@@ -20,6 +20,8 @@ try {
 	$sheet1 = $xlsxFastEditor->getWorksheetNumber('Sheet1');
 	assert($sheet1 === 1);
 
+	assert($xlsxFastEditor->deleteRow($sheet1, 5) === true);
+
 	assert($xlsxFastEditor->readFloat($sheet1, 'D2') === 3.14159);
 	assert($xlsxFastEditor->readFloat($sheet1, 'D4') === -1.0);
 	assert($xlsxFastEditor->readFloat($sheet1, 'e5') === null);

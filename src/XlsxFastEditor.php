@@ -262,6 +262,27 @@ final class XlsxFastEditor
 	}
 
 	/**
+	 * Delete the specified row of the specified worksheet.
+	 * @param int $sheetNumber Worksheet number (base 1)
+	 */
+	public function deleteRow(int $sheetNumber, int $rowNumber): bool
+	{
+		$dom = $this->getDomFromPath(self::getWorksheetPath($sheetNumber));
+		$xpath = new \DOMXPath($dom);
+		$xpath->registerNamespace('o', self::OXML_NAMESPACE);
+
+		$rs = $xpath->query("/o:worksheet/o:sheetData/o:row[@r='{$rowNumber}'][1]");
+		if ($rs !== false && $rs->length > 0) {
+			$r = $rs[0];
+			if (!($r instanceof \DOMElement) || $r->parentNode === null) {
+				throw new XlsxFastEditorXmlException("Error querying XML fragment for row {$sheetNumber} of worksheet {$sheetNumber}!");
+			}
+			return $r->parentNode->removeChild($r) != false;
+		}
+		return false;
+	}
+
+	/**
 	 * To iterate over the all the rows of a given worksheet.
 	 * @return \Traversable<XlsxFastEditorRow>
 	 */
