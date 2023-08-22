@@ -10,10 +10,10 @@ require(__DIR__ . '/../autoload.php');
 use alexandrainst\XlsxFastEditor\XlsxFastEditor;
 use alexandrainst\XlsxFastEditor\XlsxFastEditorException;
 
-copy(__DIR__ . '/test.xlsx', __DIR__ . '/copy.xlsx');
+copy(__DIR__ . '/test.xlsx', __DIR__ . '/_copy.xlsx');
 
 try {
-	$xlsxFastEditor = new XlsxFastEditor(__DIR__ . '/copy.xlsx');
+	$xlsxFastEditor = new XlsxFastEditor(__DIR__ . '/_copy.xlsx');
 
 	$sheet1 = $xlsxFastEditor->getWorksheetNumber('Sheet1');
 	assert($sheet1 === 1);
@@ -39,7 +39,7 @@ try {
 	assert($xlsxFastEditor->getFirstRow($sheet1)?->number() === 1);
 	assert($xlsxFastEditor->getRow($sheet1, 1)?->getFirstCell()?->name() === 'A1');
 	assert($xlsxFastEditor->getRow($sheet1, 2)?->number() === 2);
-	assert($xlsxFastEditor->getRow($sheet1, 3)?->getLastCell()?->name() === 'D3');
+	assert($xlsxFastEditor->getRow($sheet1, 3)?->getLastCell()?->name() === 'E3');
 	assert($xlsxFastEditor->getRow($sheet1, 4)?->getCell('D4')?->name() === 'D4');
 	assert($xlsxFastEditor->getLastRow($sheet1)?->number() === 4);
 
@@ -52,7 +52,7 @@ try {
 			$nb++;
 		}
 	}
-	assert($nb === 16);
+	assert($nb === 20);
 
 	// Writing existing cells
 	$xlsxFastEditor->writeFormula($sheet1, 'c2', '=2*3');
@@ -81,10 +81,12 @@ try {
 	// Regex
 	assert($xlsxFastEditor->textReplace('/Hello/i', 'World') > 0);
 
+	$xlsxFastEditor->setFullCalcOnLoad($sheet1, true);
+
 	$xlsxFastEditor->save();
 
 	// Verify all the changes
-	$xlsxFastEditor = new XlsxFastEditor(__DIR__ . '/copy.xlsx');
+	$xlsxFastEditor = new XlsxFastEditor(__DIR__ . '/_copy.xlsx');
 
 	assert($xlsxFastEditor->readFormula($sheet1, 'c2') === '=2*3');
 	assert($xlsxFastEditor->readString($sheet1, 'B4') === 'α');
@@ -95,8 +97,6 @@ try {
 	assert($xlsxFastEditor->readString($sheet2, 'B3') === 'β');
 	assert($xlsxFastEditor->readInt($sheet2, 'C3') === -7);
 	assert($xlsxFastEditor->readFloat($sheet2, 'D3') === 273.15);
-
-	$xlsxFastEditor->setFullCalcOnLoad($sheet2, true);
 
 	assert($xlsxFastEditor->readFormula($sheet2, 'I2') === '=7*3');
 	assert($xlsxFastEditor->readString($sheet2, 'F2') === 'γ');
@@ -112,7 +112,8 @@ try {
 
 	$xlsxFastEditor->close();
 
-	// Verify by hand that the resulting file opens without warning in Microsoft Excel
+	// Verify by hand that the resulting file opens without warning in Microsoft Excel.
+	// Verify by hand that the cell Sheet1!E4 has its formula recalculated (to -999) when opening in Excel.
 	// unlink(__DIR__ . '/copy.xlsx');
 } catch (XlsxFastEditorException $xlsxe) {
 	die($xlsxe);
