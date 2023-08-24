@@ -50,20 +50,21 @@ try {
 	$nbWorksheets = $xlsxFastEditor->getWorksheetCount();
 	$worksheetName = $xlsxFastEditor->getWorksheetName(1);
 	$worksheetId1 = $xlsxFastEditor->getWorksheetNumber('Sheet1');
-	$worksheetId2 = $xlsxFastEditor->getWorksheetNumber('Sheet2');
 	// If you want to force Excel to recalculate formulas on next load:
-	$xlsxFastEditor->setFullCalcOnLoad($worksheetId2, true);
+	$xlsxFastEditor->setFullCalcOnLoad($worksheetId1, true);
 
 	// Direct read/write access
 	$fx = $xlsxFastEditor->readFormula($worksheetId1, 'A1');
 	$f = $xlsxFastEditor->readFloat($worksheetId1, 'B2');
 	$i = $xlsxFastEditor->readInt($worksheetId1, 'C3');
-	$s = $xlsxFastEditor->readString($worksheetId2, 'D4');
+	$s = $xlsxFastEditor->readString($worksheetId1, 'D4');
+	$h = $xlsxFastEditor->readHyperlink($worksheetId1, 'B4');
 	$xlsxFastEditor->deleteRow($worksheetId1, 5);
 	$xlsxFastEditor->writeFormula($worksheetId1, 'A1', '=B2*3');
 	$xlsxFastEditor->writeFloat($worksheetId1, 'B2', 3.14);
 	$xlsxFastEditor->writeInt($worksheetId1, 'C3', 13);
-	$xlsxFastEditor->writeString($worksheetId2, 'D4', 'Hello');
+	$xlsxFastEditor->writeString($worksheetId1, 'D4', 'Hello');
+	$xlsxFastEditor->writeHyperlink($sheet1, 'B4', 'https://example.net/');	// Only for cells with an existing hyperlink
 
 	// Regex search & replace operating globally on all the worksheets:
 	$xlsxFastEditor->textReplace('/Hello/i', 'World');
@@ -91,10 +92,12 @@ try {
 	$f = $cell->readFloat();
 	$i = $cell->readInt();
 	$s = $cell->readString();
+	$h = $cell->readHyperlink();
 	$cell->writeFormula('=B2*3');
 	$cell->writeFloat(3.14);
 	$cell->writeInt(13);
 	$cell->writeString('Hello');
+	$cell->writeHyperlink('https://example.net/');	// Only for cells with an existing hyperlink
 
 	// Iterators for existing rows and cells
 	foreach ($xlsxFastEditor->rowsIterator($worksheetId1) as $row) {

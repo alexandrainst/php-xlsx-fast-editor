@@ -19,7 +19,8 @@ namespace alexandrainst\XlsxFastEditor;
  */
 final class XlsxFastEditor
 {
-	public const OXML_NAMESPACE = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
+	/** @internal */
+	public const _OXML_NAMESPACE = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
 
 	private const CALC_CHAIN_CACHE_PATH = 'xl/calcChain.xml';
 	private const SHARED_STRINGS_PATH = 'xl/sharedStrings.xml';
@@ -28,8 +29,8 @@ final class XlsxFastEditor
 	private \ZipArchive $zip;
 
 	/**
-	 * Cache of the XML documents.
-	 * @var array<string,\DOMDocument>
+	 * Cache of the XPath instances associated to the DOM of the XML documents.
+	 * @var array<string,\DOMXPath>
 	 */
 	private array $documents = [];
 
@@ -111,10 +112,11 @@ final class XlsxFastEditor
 			if (!$pending || !isset($this->documents[$name])) {
 				continue;
 			}
-			$dom = $this->documents[$name];
+			$xpath = $this->documents[$name];
 			if (!$this->zip->deleteName($name)) {
 				throw new XlsxFastEditorZipException("Error deleting old fragment {$name}!");
 			}
+			$dom = $xpath->document;
 			$xml = $dom->saveXML();
 			if ($xml === false) {
 				throw new XlsxFastEditorXmlException("Error saving changes {$name}!");
@@ -131,60 +133,13 @@ final class XlsxFastEditor
 	}
 
 	/**
-	 * Count the number of worksheets in the workbook.
-	 */
-	public function getWorksheetCount(): int
-	{
-		$dom = $this->getDomFromPath(self::WORKBOOK_PATH);
-		$xpath = new \DOMXPath($dom);
-		$xpath->registerNamespace('o', self::OXML_NAMESPACE);
-		$count = $xpath->evaluate('count(/o:workbook/o:sheets/o:sheet)');
-		return is_numeric($count) ? (int)$count : 0;
-	}
-
-	/**
-	 * Get a worksheet number (ID) from its name (base 1).
-	 * @param string $sheetName The name of the worksheet to look up.
-	 * @return int The worksheet ID, or -1 if not found.
-	 */
-	public function getWorksheetNumber(string $sheetName): int
-	{
-		$dom = $this->getDomFromPath(self::WORKBOOK_PATH);
-		$xpath = new \DOMXPath($dom);
-		$xpath->registerNamespace('o', self::OXML_NAMESPACE);
-		$sheetId = $xpath->evaluate("normalize-space(/o:workbook/o:sheets/o:sheet[@name='$sheetName'][1]/@sheetId)");
-		if (is_string($sheetId)) {
-			return (int)$sheetId;
-		}
-		return -1;
-	}
-
-	/**
-	 * Get a worksheet name from its number (ID).
-	 * @param int $sheetNumber The number of the worksheet to look up.
-	 * @return string|null The worksheet name, or null if not found.
-	 */
-	public function getWorksheetName(int $sheetNumber): ?string
-	{
-		$dom = $this->getDomFromPath(self::WORKBOOK_PATH);
-		$xpath = new \DOMXPath($dom);
-		$xpath->registerNamespace('o', self::OXML_NAMESPACE);
-		$sheetName = $xpath->evaluate("normalize-space(/o:workbook/o:sheets/o:sheet[$sheetNumber][1]/@name)");
-		return is_string($sheetName) ? $sheetName : null;
-	}
-
-	private static function getWorksheetPath(int $sheetNumber): string
-	{
-		return "xl/worksheets/sheet{$sheetNumber}.xml";
-	}
-
-	/**
 	 * Extracts a worksheet from the internal ZIP document,
-	 * parse the XML, and returns a DOM document.
-	 * The DOM document is then cached.
+	 * parse the XML, open the DOM, and
+	 * returns an XPath instance associated to the DOM at the given XML path.
+	 * The XPath instance is then cached.
 	 * @param string $path The path of the document inside the ZIP document.
 	 */
-	private function getDomFromPath(string $path): \DOMDocument
+	private function getXPathFromPath(string $path): \DOMXPath
 	{
 		if (isset($this->documents[$path])) {
 			return $this->documents[$path];
@@ -200,8 +155,62 @@ final class XlsxFastEditor
 			throw new XlsxFastEditorXmlException("Error reading XML fragment {$path}!");
 		}
 
-		$this->documents[$path] = $dom;
-		return $dom;
+		$xpath = new \DOMXPath($dom);
+		$xpath->registerNamespace('o', self::_OXML_NAMESPACE);
+
+		$this->documents[$path] = $xpath;
+		return $xpath;
+	}
+
+	/**
+	 * Returns a DOM document of the given XML path.
+	 * @param string $path The path of the document inside the ZIP document.
+	 */
+	private function getDomFromPath(string $path): \DOMDocument
+	{
+		return $this->getXPathFromPath($path)->document;
+	}
+
+	/**
+	 * Count the number of worksheets in the workbook.
+	 */
+	public function getWorksheetCount(): int
+	{
+		$xpath = $this->getXPathFromPath(self::WORKBOOK_PATH);
+		$count = $xpath->evaluate('count(/o:workbook/o:sheets/o:sheet)');
+		return is_numeric($count) ? (int)$count : 0;
+	}
+
+	/**
+	 * Get a worksheet number (ID) from its name (base 1).
+	 * @param string $sheetName The name of the worksheet to look up.
+	 * @return int The worksheet ID, or -1 if not found.
+	 */
+	public function getWorksheetNumber(string $sheetName): int
+	{
+		$xpath = $this->getXPathFromPath(self::WORKBOOK_PATH);
+		$sheetId = $xpath->evaluate("normalize-space(/o:workbook/o:sheets/o:sheet[@name='$sheetName'][1]/@sheetId)");
+		if (is_string($sheetId)) {
+			return (int)$sheetId;
+		}
+		return -1;
+	}
+
+	/**
+	 * Get a worksheet name from its number (ID).
+	 * @param int $sheetNumber The number of the worksheet to look up.
+	 * @return string|null The worksheet name, or null if not found.
+	 */
+	public function getWorksheetName(int $sheetNumber): ?string
+	{
+		$xpath = $this->getXPathFromPath(self::WORKBOOK_PATH);
+		$sheetName = $xpath->evaluate("normalize-space(/o:workbook/o:sheets/o:sheet[$sheetNumber][1]/@name)");
+		return is_string($sheetName) ? $sheetName : null;
+	}
+
+	private static function getWorksheetPath(int $sheetNumber): string
+	{
+		return "xl/worksheets/sheet{$sheetNumber}.xml";
 	}
 
 	/**
@@ -248,10 +257,7 @@ final class XlsxFastEditor
 	 */
 	public function getRow(int $sheetNumber, int $rowNumber, int $accessMode = XlsxFastEditor::ACCESS_MODE_NULL): ?XlsxFastEditorRow
 	{
-		$dom = $this->getDomFromPath(self::getWorksheetPath($sheetNumber));
-		$xpath = new \DOMXPath($dom);
-		$xpath->registerNamespace('o', self::OXML_NAMESPACE);
-
+		$xpath = $this->getXPathFromPath(self::getWorksheetPath($sheetNumber));
 		$rows = $xpath->query("/o:worksheet/o:sheetData/o:row[@r='{$rowNumber}'][1]");
 		$row = null;
 		if ($rows !== false && $rows->length > 0) {
@@ -268,7 +274,7 @@ final class XlsxFastEditor
 				case XlsxFastEditor::ACCESS_MODE_EXCEPTION:
 					throw new XlsxFastEditorInputException("Row {$sheetNumber}/{$rowNumber} not found!");
 				case XlsxFastEditor::ACCESS_MODE_AUTOCREATE:
-					$sheetDatas = $dom->getElementsByTagName('sheetData');
+					$sheetDatas = $xpath->document->getElementsByTagName('sheetData');
 					if ($sheetDatas->length === 0) {
 						throw new XlsxFastEditorXmlException("Cannot find sheetData for worksheet {$sheetNumber}!");
 					}
@@ -276,7 +282,7 @@ final class XlsxFastEditor
 					if (!($sheetData instanceof \DOMElement)) {
 						throw new XlsxFastEditorXmlException("Error querying XML fragment for worksheet {$sheetNumber}!");
 					}
-					$row = $dom->createElement('row');
+					$row = $xpath->document->createElement('row');
 					if ($row === false) {
 						throw new XlsxFastEditorXmlException("Error creating row {$sheetNumber}/{$rowNumber}!");
 					}
@@ -305,10 +311,7 @@ final class XlsxFastEditor
 	 */
 	public function getFirstRow(int $sheetNumber): ?XlsxFastEditorRow
 	{
-		$dom = $this->getDomFromPath(self::getWorksheetPath($sheetNumber));
-		$xpath = new \DOMXPath($dom);
-		$xpath->registerNamespace('o', self::OXML_NAMESPACE);
-
+		$xpath = $this->getXPathFromPath(self::getWorksheetPath($sheetNumber));
 		$rs = $xpath->query("/o:worksheet/o:sheetData/o:row[position() = 1]");
 		if ($rs !== false && $rs->length > 0) {
 			$r = $rs[0];
@@ -327,10 +330,7 @@ final class XlsxFastEditor
 	 */
 	public function getLastRow(int $sheetNumber): ?XlsxFastEditorRow
 	{
-		$dom = $this->getDomFromPath(self::getWorksheetPath($sheetNumber));
-		$xpath = new \DOMXPath($dom);
-		$xpath->registerNamespace('o', self::OXML_NAMESPACE);
-
+		$xpath = $this->getXPathFromPath(self::getWorksheetPath($sheetNumber));
 		$rs = $xpath->query("/o:worksheet/o:sheetData/o:row[position() = last()]");
 		if ($rs !== false && $rs->length > 0) {
 			$r = $rs[0];
@@ -348,10 +348,7 @@ final class XlsxFastEditor
 	 */
 	public function deleteRow(int $sheetNumber, int $rowNumber): bool
 	{
-		$dom = $this->getDomFromPath(self::getWorksheetPath($sheetNumber));
-		$xpath = new \DOMXPath($dom);
-		$xpath->registerNamespace('o', self::OXML_NAMESPACE);
-
+		$xpath = $this->getXPathFromPath(self::getWorksheetPath($sheetNumber));
 		$rs = $xpath->query("/o:worksheet/o:sheetData/o:row[@r='{$rowNumber}'][1]");
 		if ($rs !== false && $rs->length > 0) {
 			$r = $rs[0];
@@ -369,10 +366,7 @@ final class XlsxFastEditor
 	 */
 	public function rowsIterator(int $sheetNumber): \Traversable
 	{
-		$dom = $this->getDomFromPath(self::getWorksheetPath($sheetNumber));
-		$xpath = new \DOMXPath($dom);
-		$xpath->registerNamespace('o', self::OXML_NAMESPACE);
-
+		$xpath = $this->getXPathFromPath(self::getWorksheetPath($sheetNumber));
 		$rs = $xpath->query("/o:worksheet/o:sheetData/o:row");
 		if ($rs !== false) {
 			for ($i = 0; $i < $rs->length; $i++) {
@@ -427,16 +421,12 @@ final class XlsxFastEditor
 	 */
 	public function getCell(int $sheetNumber, string $cellName, int $accessMode = XlsxFastEditor::ACCESS_MODE_NULL): ?XlsxFastEditorCell
 	{
-		$dom = $this->getDomFromPath(self::getWorksheetPath($sheetNumber));
-		$xpath = new \DOMXPath($dom);
-		$xpath->registerNamespace('o', self::OXML_NAMESPACE);
-
 		if (!ctype_alnum($cellName)) {
 			throw new XlsxFastEditorInputException("Invalid cell reference {$cellName}!");
 		}
 		$cellName = strtoupper($cellName);
 
-		$c = null;
+		$xpath = $this->getXPathFromPath(self::getWorksheetPath($sheetNumber));
 		$cs = $xpath->query("/o:worksheet/o:sheetData/o:row/o:c[@r='{$cellName}'][1]");
 		$c = null;
 		if ($cs !== false && $cs->length > 0) {
@@ -511,12 +501,9 @@ final class XlsxFastEditor
 	 */
 	public function _getSharedString(int $stringNumber): ?string
 	{
-		$dom = $this->getDomFromPath(self::SHARED_STRINGS_PATH);
-		$xpath = new \DOMXPath($dom);
-		$xpath->registerNamespace('o', self::OXML_NAMESPACE);
-
 		$stringNumber++;	// Base 1
 
+		$xpath = $this->getXPathFromPath(self::SHARED_STRINGS_PATH);
 		$ts = $xpath->query("/o:sst/o:si[$stringNumber][1]/o:t[1]");
 		if ($ts !== false && $ts->length > 0) {
 			$t = $ts[0];
@@ -539,6 +526,84 @@ final class XlsxFastEditor
 	{
 		$cell = $this->getCell($sheetNumber, $cellName, XlsxFastEditor::ACCESS_MODE_NULL);
 		return $cell === null ? null : $cell->readString();
+	}
+
+	private static function getWorksheetRelPath(int $sheetNumber): string
+	{
+		return "xl/worksheets/_rels/sheet{$sheetNumber}.xml.rels";
+	}
+
+	/**
+	 * Access an hyperlink referenced from a cell of the specified sheet.
+	 * @param string $rId Hyperlink reference.
+	 * @internal
+	 */
+	public function _getHyperlink(int $sheetNumber, string $rId): ?string
+	{
+		if (!ctype_alnum($rId)) {
+			throw new XlsxFastEditorInputException("Invalid internal hyperlink reference {$sheetNumber}/{$rId}!");
+		}
+		$xpath = $this->getXPathFromPath(self::getWorksheetRelPath($sheetNumber));
+		$xpath->registerNamespace('pr', 'http://schemas.openxmlformats.org/package/2006/relationships');
+		$target = $xpath->evaluate(<<<xpath
+			normalize-space(/pr:Relationships/pr:Relationship[@Id='{$rId}'
+			and @Type='http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink'][1]/@Target)
+		xpath);
+		return is_string($target) ? $target : null;
+	}
+
+	/**
+	 * Read a hyperlink in the given worksheet at the given cell location.
+	 *
+	 * @param int $sheetNumber Worksheet number (base 1)
+	 * @param $cellName Cell name such as `B4`
+	 */
+	public function readHyperlink(int $sheetNumber, string $cellName): ?string
+	{
+		$cell = $this->getCell($sheetNumber, $cellName, XlsxFastEditor::ACCESS_MODE_NULL);
+		return $cell === null ? null : $cell->readHyperlink();
+	}
+
+	/**
+	 * Change an hyperlink associated to the given cell of the given worksheet.
+	 * @return bool True if any hyperlink was cleared, false otherwise.
+	 * @internal
+	 */
+	public function _setHyperlink(int $sheetNumber, string $rId, string $value): bool
+	{
+		if (!ctype_alnum($rId)) {
+			throw new XlsxFastEditorInputException("Invalid internal hyperlink reference {$sheetNumber}/{$rId}!");
+		}
+		$xmlPath = self::getWorksheetRelPath($sheetNumber);
+		$xpath = $this->getXPathFromPath($xmlPath);
+		$xpath->registerNamespace('pr', 'http://schemas.openxmlformats.org/package/2006/relationships');
+		$hyperlinks = $xpath->query(<<<xpath
+			/pr:Relationships/pr:Relationship[@Id='{$rId}'
+			and @Type='http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink'][1]
+		xpath);
+		if ($hyperlinks !== false && $hyperlinks->length > 0) {
+			$hyperlink = $hyperlinks[0];
+			if (!($hyperlink instanceof \DOMElement)) {
+				throw new XlsxFastEditorXmlException("Error querying XML fragment for hyperlink {$sheetNumber}/{$rId}!");
+			}
+			$this->touchPath($xmlPath);
+			return $hyperlink->setAttribute('Target', $value) !== false;
+		}
+		return false;
+	}
+
+	/**
+	 * Replace the hyperlink of the cell, if that cell already has an hyperlink.
+	 * Warning: does not support the creation of a new hyperlink.
+	 *
+	 * @param int $sheetNumber Worksheet number (base 1)
+	 * @param $cellName Cell name such as `B4`
+	 * @return bool True if the hyperlink could be replaced, false otherwise.
+	 */
+	public function writeHyperlink(int $sheetNumber, string $cellName, string $value): bool
+	{
+		$cell = $this->getCell($sheetNumber, $cellName, XlsxFastEditor::ACCESS_MODE_NULL);
+		return $cell === null ? false : $cell->writeHyperlink($value);
 	}
 
 	/**

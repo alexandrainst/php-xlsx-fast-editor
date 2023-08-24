@@ -39,7 +39,7 @@ final class XlsxFastEditorRow
 				throw new XlsxFastEditorInputException("Internal error accessing row {$this->number()}!");
 			}
 			$xpath = new \DOMXPath($dom);
-			$xpath->registerNamespace('o', XlsxFastEditor::OXML_NAMESPACE);
+			$xpath->registerNamespace('o', XlsxFastEditor::_OXML_NAMESPACE);
 			$this->xpath = $xpath;
 		}
 		return $this->xpath;

@@ -10,6 +10,7 @@ final class XlsxFastEditorCell
 	private XlsxFastEditor $editor;
 	private int $sheetNumber;
 	private \DOMElement $c;
+	private ?\DOMXPath $xpath = null;
 
 	/**
 	 * @internal
@@ -19,6 +20,21 @@ final class XlsxFastEditorCell
 		$this->editor = $editor;
 		$this->sheetNumber = $sheetNumber;
 		$this->c = $c;
+	}
+
+	private function getXPath(): \DOMXPath
+	{
+		if ($this->xpath === null) {
+			$dom = $this->c->ownerDocument;
+			if ($dom === null) {
+				throw new XlsxFastEditorInputException("Internal error accessing cell {$this->name()}!");
+			}
+			$xpath = new \DOMXPath($dom);
+			$xpath->registerNamespace('o', XlsxFastEditor::_OXML_NAMESPACE);
+			$xpath->registerNamespace('or', 'http://schemas.openxmlformats.org/officeDocument/2006/relationships');
+			$this->xpath = $xpath;
+		}
+		return $this->xpath;
 	}
 
 	/**
@@ -149,6 +165,19 @@ final class XlsxFastEditorCell
 	}
 
 	/**
+	 * Read the hyperlink value of the cell, if any.
+	 */
+	public function readHyperlink(): ?string
+	{
+		$xpath = $this->getXPath();
+		$rid = $xpath->evaluate("normalize-space(/o:worksheet/o:hyperlinks/o:hyperlink[@ref='{$this->name()}'][1]/@or:id)");
+		if (!is_string($rid) || $rid === '') {
+			return null;
+		}
+		return $this->editor->_getHyperlink($this->sheetNumber, $rid);
+	}
+
+	/**
 	 * Clean the cell to have its value written.
 	 * @return \DOMElement The `<v>` value element of the provided cell, or null in case of error.
 	 */
@@ -262,5 +291,20 @@ final class XlsxFastEditorCell
 		$sharedStringId = $this->editor->_makeNewSharedString($value);
 		$v->nodeValue = (string)$sharedStringId;
 		$this->editor->_touchWorksheet($this->sheetNumber);
+	}
+
+	/**
+	 * Replace the hyperlink of the cell, if that cell already has an hyperlink.
+	 * Warning: does not support the creation of a new hyperlink.
+	 * @return bool True if the hyperlink could be replaced, false otherwise.
+	 */
+	public function writeHyperlink(string $value): bool
+	{
+		$xpath = $this->getXPath();
+		$rId = $xpath->evaluate("normalize-space(/o:worksheet/o:hyperlinks/o:hyperlink[@ref='{$this->name()}'][1]/@or:id)");
+		if (!is_string($rId) || $rId === '') {
+			return false;
+		}
+		return $this->editor->_setHyperlink($this->sheetNumber, $rId, $value);
 	}
 }

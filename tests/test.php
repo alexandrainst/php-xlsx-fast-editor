@@ -29,6 +29,8 @@ try {
 	assert($xlsxFastEditor->readInt($sheet1, 'F6') === null);
 	assert($xlsxFastEditor->readString($sheet1, 'b4') === 'naïveté');
 	assert($xlsxFastEditor->readString($sheet1, 'F7') === null);
+	assert($xlsxFastEditor->readHyperlink($sheet1, 'B4') === 'https://example.net/');
+	assert($xlsxFastEditor->readHyperlink($sheet1, 'C3') === null);
 
 	$sheet2 = $xlsxFastEditor->getWorksheetNumber('Sheet2');
 	assert($sheet2 === 2);
@@ -62,6 +64,7 @@ try {
 	// Writing existing cells
 	$xlsxFastEditor->writeFormula($sheet1, 'c2', '=2*3');
 	$xlsxFastEditor->writeString($sheet1, 'b4', 'α');
+	$xlsxFastEditor->writeHyperlink($sheet1, 'B4', 'https://example.org/');
 	$xlsxFastEditor->writeInt($sheet1, 'c4', 15);
 	$xlsxFastEditor->writeFloat($sheet1, 'd4', -66.6);
 
@@ -95,6 +98,7 @@ try {
 
 	assert($xlsxFastEditor->readFormula($sheet1, 'c2') === '=2*3');
 	assert($xlsxFastEditor->readString($sheet1, 'B4') === 'α');
+	assert($xlsxFastEditor->readHyperlink($sheet1, 'B4') === 'https://example.org/');
 	assert($xlsxFastEditor->readInt($sheet1, 'C4') === 15);
 	assert($xlsxFastEditor->readFloat($sheet1, 'D4') === -66.6);
 
