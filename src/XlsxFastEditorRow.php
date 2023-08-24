@@ -8,11 +8,17 @@ namespace alexandrainst\XlsxFastEditor;
 final class XlsxFastEditorRow
 {
 	private XlsxFastEditor $editor;
+	private int $sheetNumber;
 	private \DOMElement $r;
+	private ?\DOMXPath $xpath = null;
 
-	public function __construct(XlsxFastEditor $editor, \DOMElement $r)
+	/**
+	 * @internal
+	 */
+	public function __construct(XlsxFastEditor $editor, int $sheetNumber, \DOMElement $r)
 	{
 		$this->editor = $editor;
+		$this->sheetNumber = $sheetNumber;
 		$this->r = $r;
 	}
 
@@ -25,6 +31,20 @@ final class XlsxFastEditorRow
 		return (int)$this->r->getAttribute('r');
 	}
 
+	private function getXPath(): \DOMXPath
+	{
+		if ($this->xpath === null) {
+			$dom = $this->r->ownerDocument;
+			if ($dom === null) {
+				throw new XlsxFastEditorInputException("Internal error accessing row {$this->number()}!");
+			}
+			$xpath = new \DOMXPath($dom);
+			$xpath->registerNamespace('o', XlsxFastEditor::OXML_NAMESPACE);
+			$this->xpath = $xpath;
+		}
+		return $this->xpath;
+	}
+
 	/**
 	 * Access the previous existing row, if any, null otherwise.
 	 */
@@ -33,7 +53,7 @@ final class XlsxFastEditorRow
 		$r = $this->r->previousElementSibling;
 		while ($r !== null) {
 			if ($r->localName === 'r') {
-				return new XlsxFastEditorRow($this->editor, $r);
+				return new XlsxFastEditorRow($this->editor, $this->sheetNumber, $r);
 			}
 			$r = $this->r->previousElementSibling;
 		}
@@ -48,7 +68,7 @@ final class XlsxFastEditorRow
 		$r = $this->r->nextElementSibling;
 		while ($r !== null) {
 			if ($r->localName === 'r') {
-				return new XlsxFastEditorRow($this->editor, $r);
+				return new XlsxFastEditorRow($this->editor, $this->sheetNumber, $r);
 			}
 			$r = $this->r->nextElementSibling;
 		}
@@ -64,7 +84,7 @@ final class XlsxFastEditorRow
 		$c = $this->r->firstElementChild;
 		while ($c !== null) {
 			if ($c->localName === 'c') {
-				yield new XlsxFastEditorCell($this->editor, $c);
+				yield new XlsxFastEditorCell($this->editor, $this->sheetNumber, $c);
 			}
 			$c = $c->nextElementSibling;
 		}
@@ -79,7 +99,7 @@ final class XlsxFastEditorRow
 		$c = $this->r->firstElementChild;
 		while ($c !== null) {
 			if ($c->localName === 'c') {
-				return new XlsxFastEditorCell($this->editor, $c);
+				return new XlsxFastEditorCell($this->editor, $this->sheetNumber, $c);
 			}
 			$c = $c->nextElementSibling;
 		}
@@ -87,26 +107,52 @@ final class XlsxFastEditorRow
 	}
 
 	/**
-	 * Get the cell of the given name.
+	 * Get the cell of the given name if it exists.
 	 * @param $cellName Cell name such as `B4`
+	 * @param int $accessMode To control the behaviour when the cell does not exist:
+	 * set to `XlsxFastEditor::ACCESS_MODE_NULL` to return `null` (default),
+	 * set to `XlsxFastEditor::ACCESS_MODE_EXCEPTION` to raise an `XlsxFastEditorInputException` exception,
+	 * set to `XlsxFastEditor::ACCESS_MODE_AUTOCREATE` to auto-create the cell.
+	 * @return XlsxFastEditorCell|null A cell, potentially `null` if the cell does not exist and `$accessMode` is set to `XlsxFastEditor::ACCESS_MODE_NULL`
+	 * @phpstan-return ($accessMode is XlsxFastEditor::ACCESS_MODE_NULL ? XlsxFastEditorCell|null : XlsxFastEditorCell)
 	 */
-	public function getCell(string $cellName): ?XlsxFastEditorCell
+	public function getCell(string $cellName, int $accessMode = XlsxFastEditor::ACCESS_MODE_NULL): ?XlsxFastEditorCell
 	{
-		$dom = $this->r->ownerDocument;
-		if ($dom === null) {
-			throw new XlsxFastEditorInputException("Internal error accessing cell {$this->number()}/{$cellName}!");
-		}
-		$xpath = new \DOMXPath($dom);
-		$xpath->registerNamespace('o', XlsxFastEditor::OXML_NAMESPACE);
+		$xpath = $this->getXPath();
 		$cs = $xpath->query("./o:c[@r='$cellName'][1]", $this->r);
+		$c = null;
 		if ($cs !== false && $cs->length > 0) {
 			$c = $cs[0];
 			if (!($c instanceof \DOMElement)) {
 				throw new XlsxFastEditorXmlException("Error querying XML fragment for cell {$this->number()}/{$cellName}!");
 			}
-			return new XlsxFastEditorCell($this->editor, $c);
 		}
-		return null;
+
+		if ($c === null && $accessMode === XlsxFastEditor::ACCESS_MODE_AUTOCREATE) {
+			// The cell <c> was not found
+			$dom = $xpath->document;
+			$c = $dom->createElement('c');
+			if ($c === false) {
+				throw new XlsxFastEditorXmlException("Error creating cell {$this->sheetNumber}/{$cellName}!");
+			}
+			$c->setAttribute('r', $cellName);
+
+			// Excel expects the cells to be sorted
+			$sibling = $this->r->firstElementChild;
+			while ($sibling !== null && XlsxFastEditor::_columnOrderCompare($sibling->getAttribute('r'), $cellName) < 0) {
+				$sibling = $sibling->nextElementSibling;
+			}
+			$this->r->insertBefore($c, $sibling);
+		}
+
+		if ($c === null) {
+			if ($accessMode === XlsxFastEditor::ACCESS_MODE_EXCEPTION) {
+				throw new XlsxFastEditorInputException("Cell {$this->sheetNumber}/{$cellName} not found!");
+			}
+			return null;
+		}
+
+		return new XlsxFastEditorCell($this->editor, $this->sheetNumber, $c);
 	}
 
 	/**
@@ -118,7 +164,7 @@ final class XlsxFastEditorRow
 		$c = $this->r->lastElementChild;
 		while ($c !== null) {
 			if ($c->localName === 'c') {
-				return new XlsxFastEditorCell($this->editor, $c);
+				return new XlsxFastEditorCell($this->editor, $this->sheetNumber, $c);
 			}
 			$c = $c->previousElementSibling;
 		}

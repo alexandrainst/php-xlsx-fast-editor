@@ -64,12 +64,22 @@ final class XlsxFastEditor
 
 	/**
 	 * Mark a document fragment as modified.
+	 * @internal
 	 * @param int $sheetNumber Worksheet number (base 1)
 	 */
-	private function touchWorksheet(int $sheetNumber): void
+	public function _touchWorksheet(int $sheetNumber): void
 	{
 		$path = self::getWorksheetPath($sheetNumber);
 		$this->touchPath($path);
+	}
+
+	/**
+	 * Will clear the calcChain on save.
+	 * @internal
+	 */
+	public function _clearCalcChain(): void
+	{
+		$this->mustClearCalcChain = true;
 	}
 
 	/**
@@ -195,6 +205,100 @@ final class XlsxFastEditor
 	}
 
 	/**
+	 * Defines the *Full calculation on load* policy for the specified worksheet.
+	 * @param int $sheetNumber Worksheet number (base 1)
+	 */
+	public function setFullCalcOnLoad(int $sheetNumber, bool $value): void
+	{
+		$this->mustClearCalcChain = true;
+		$dom = $this->getDomFromPath(self::getWorksheetPath($sheetNumber));
+		$sheetCalcPr = null;
+		$sheetCalcPrs = $dom->getElementsByTagName('sheetCalcPr');
+		if ($sheetCalcPrs->length > 0) {
+			$sheetCalcPr = $sheetCalcPrs[0];
+		} else {
+			$sheetDatas = $dom->getElementsByTagName('sheetData');
+			if ($sheetDatas->length > 0) {
+				$sheetData = $sheetDatas[0];
+				if ($sheetData instanceof \DOMElement) {
+					$sheetCalcPr = $dom->createElement('sheetCalcPr');
+					if ($sheetCalcPr !== false && $sheetData->parentNode !== null) {
+						$sheetData->parentNode->insertBefore($sheetCalcPr, $sheetData->nextSibling);
+					}
+				}
+			}
+		}
+		if ($sheetCalcPr instanceof \DOMElement) {
+			$sheetCalcPr->setAttribute('fullCalcOnLoad', $value ? 'true' : 'false');
+			$this->_touchWorksheet($sheetNumber);
+		}
+	}
+
+	/**
+	 * Get the row of the given number in the given worksheet.
+	 * @param int $sheetNumber Worksheet number (base 1)
+	 * @param int $rowNumber Number (ID) of the row (base 1). Warning: this is not an index (not all rows necessarily exist in a sequence)
+	 * @return XlsxFastEditorRow|null The row of that number in that worksheet if it exists, null otherwise.
+	 * @param int $accessMode To control the behaviour when the cell does not exist:
+	 * set to `XlsxFastEditor::ACCESS_MODE_NULL` to return `null` (default),
+	 * set to `XlsxFastEditor::ACCESS_MODE_EXCEPTION` to raise an `XlsxFastEditorInputException` exception,
+	 * set to `XlsxFastEditor::ACCESS_MODE_AUTOCREATE` to auto-create the cell.
+	 * @return XlsxFastEditorRow|null A row, potentially `null` if the row does not exist and `$accessMode` is set to `XlsxFastEditor::ACCESS_MODE_NULL`
+	 * @phpstan-return ($accessMode is XlsxFastEditor::ACCESS_MODE_NULL ? XlsxFastEditorRow|null : XlsxFastEditorRow)
+	 */
+	public function getRow(int $sheetNumber, int $rowNumber, int $accessMode = XlsxFastEditor::ACCESS_MODE_NULL): ?XlsxFastEditorRow
+	{
+		$dom = $this->getDomFromPath(self::getWorksheetPath($sheetNumber));
+		$xpath = new \DOMXPath($dom);
+		$xpath->registerNamespace('o', self::OXML_NAMESPACE);
+
+		$rows = $xpath->query("/o:worksheet/o:sheetData/o:row[@r='{$rowNumber}'][1]");
+		$row = null;
+		if ($rows !== false && $rows->length > 0) {
+			$row = $rows[0];
+			if (!($row instanceof \DOMElement)) {
+				throw new XlsxFastEditorXmlException("Error querying XML fragment for row {$sheetNumber} of worksheet {$sheetNumber}!");
+			}
+		}
+
+		if ($row === null) {
+			// The <row> was not found
+
+			switch ($accessMode) {
+				case XlsxFastEditor::ACCESS_MODE_EXCEPTION:
+					throw new XlsxFastEditorInputException("Row {$sheetNumber}/{$rowNumber} not found!");
+				case XlsxFastEditor::ACCESS_MODE_AUTOCREATE:
+					$sheetDatas = $dom->getElementsByTagName('sheetData');
+					if ($sheetDatas->length === 0) {
+						throw new XlsxFastEditorXmlException("Cannot find sheetData for worksheet {$sheetNumber}!");
+					}
+					$sheetData = $sheetDatas[0];
+					if (!($sheetData instanceof \DOMElement)) {
+						throw new XlsxFastEditorXmlException("Error querying XML fragment for worksheet {$sheetNumber}!");
+					}
+					$row = $dom->createElement('row');
+					if ($row === false) {
+						throw new XlsxFastEditorXmlException("Error creating row {$sheetNumber}/{$rowNumber}!");
+					}
+					$row->setAttribute('r', (string)$rowNumber);
+
+					// Excel expects the lines to be sorted
+					$sibling = $sheetData->firstElementChild;
+					while ($sibling !== null && (int)$sibling->getAttribute('r') < $rowNumber) {
+						$sibling = $sibling->nextElementSibling;
+					}
+					$sheetData->insertBefore($row, $sibling);
+					break;
+				default:
+				case XlsxFastEditor::ACCESS_MODE_NULL:
+					return null;
+			}
+		}
+
+		return new XlsxFastEditorRow($this, $sheetNumber, $row);
+	}
+
+	/**
 	 * Get the first existing row of the worksheet.
 	 * @param int $sheetNumber Worksheet number (base 1)
 	 * @return XlsxFastEditorRow|null The first row of the worksheet if there is any row, null otherwise.
@@ -211,30 +315,7 @@ final class XlsxFastEditor
 			if (!($r instanceof \DOMElement)) {
 				throw new XlsxFastEditorXmlException("Error querying XML fragment for row {$sheetNumber} of worksheet {$sheetNumber}!");
 			}
-			return new XlsxFastEditorRow($this, $r);
-		}
-		return null;
-	}
-
-	/**
-	 * Get the row of the given number in the given worksheet.
-	 * @param int $sheetNumber Worksheet number (base 1)
-	 * @param int $rowNumber Number (ID) of the row (base 1). Warning: this is not an index (not all rows necessarily exist in a sequence)
-	 * @return XlsxFastEditorRow|null The row of that number in that worksheet if it exists, null otherwise.
-	 */
-	public function getRow(int $sheetNumber, int $rowNumber): ?XlsxFastEditorRow
-	{
-		$dom = $this->getDomFromPath(self::getWorksheetPath($sheetNumber));
-		$xpath = new \DOMXPath($dom);
-		$xpath->registerNamespace('o', self::OXML_NAMESPACE);
-
-		$rs = $xpath->query("/o:worksheet/o:sheetData/o:row[@r='{$rowNumber}'][1]");
-		if ($rs !== false && $rs->length > 0) {
-			$r = $rs[0];
-			if (!($r instanceof \DOMElement)) {
-				throw new XlsxFastEditorXmlException("Error querying XML fragment for row {$sheetNumber} of worksheet {$sheetNumber}!");
-			}
-			return new XlsxFastEditorRow($this, $r);
+			return new XlsxFastEditorRow($this, $sheetNumber, $r);
 		}
 		return null;
 	}
@@ -256,7 +337,7 @@ final class XlsxFastEditor
 			if (!($r instanceof \DOMElement)) {
 				throw new XlsxFastEditorXmlException("Error querying XML fragment for row {$sheetNumber} of worksheet {$sheetNumber}!");
 			}
-			return new XlsxFastEditorRow($this, $r);
+			return new XlsxFastEditorRow($this, $sheetNumber, $r);
 		}
 		return null;
 	}
@@ -299,37 +380,92 @@ final class XlsxFastEditor
 				if (!($r instanceof \DOMElement)) {
 					throw new XlsxFastEditorXmlException("Error querying XML fragment for row {$sheetNumber}!");
 				}
-				yield new XlsxFastEditorRow($this, $r);
+				yield new XlsxFastEditorRow($this, $sheetNumber, $r);
 			}
 		}
 	}
 
 	/**
-	 * Access the DOMElement representing a cell formula `<f>` in the worksheet.
+	 * Sort cells within the same line, such as B3, AA3. Compare only the column part.
+	 * @param $ref1 A cell reference such as B3
+	 * @param $ref1 A cell reference such as AA3
+	 * @return int -1 if $ref1 is before $ref2; 1 if $ref1 is greater than $ref2, and 0 if they are equal.
+	 * @internal
+	 */
+	public static function _columnOrderCompare(string $ref1, string $ref2): int
+	{
+		$pattern = '/[^A-Z]+/';
+		$column1 = preg_replace($pattern, '', $ref1) ?? '';
+		$column2 = preg_replace($pattern, '', $ref2) ?? '';
+		$length1 = strlen($column1);
+		$length2 = strlen($column2);
+		if ($length1 !== $length2) {
+			return $length1 <=> $length2;
+		}
+		return strcmp($ref1, $ref2);
+	}
+
+	/** To return `null` when accessing a row or cell that does not exist, e.g. via {@see XlsxFastEditor::getCell()} */
+	public const ACCESS_MODE_NULL = 0;
+	/** To throw an exception when accessing a row or cell that does not exist, e.g. via {@see XlsxFastEditor::getCell()} */
+	public const ACCESS_MODE_EXCEPTION = 1;
+	/** To auto-create the cell when accessing a row or cell that does not exist, e.g. via {@see XlsxFastEditor::getCell()} */
+	public const ACCESS_MODE_AUTOCREATE = 2;
+
+	/**
+	 * Access the specified cell in the specified worksheet. Can create it automatically if asked to.
+	 * The corresponding row can also be automatically created if it does not exist already, but the worksheet cannot be automatically created.
 	 *
 	 * @param int $sheetNumber Worksheet number (base 1)
 	 * @param $cellName Cell name such as `B4`
+	 * @param int $accessMode To control the behaviour when the cell does not exist:
+	 * set to `XlsxFastEditor::ACCESS_MODE_NULL` to return `null` (default),
+	 * set to `XlsxFastEditor::ACCESS_MODE_EXCEPTION` to raise an `XlsxFastEditorInputException` exception,
+	 * set to `XlsxFastEditor::ACCESS_MODE_AUTOCREATE` to auto-create the cell.
+	 * @return XlsxFastEditorCell|null A cell, potentially `null` if the cell does not exist and `$accessMode` is set to `XlsxFastEditor::ACCESS_MODE_NULL`
+	 * @phpstan-return ($accessMode is XlsxFastEditor::ACCESS_MODE_NULL ? XlsxFastEditorCell|null : XlsxFastEditorCell)
 	 */
-	private function getF(int $sheetNumber, string $cellName): ?\DOMElement
+	public function getCell(int $sheetNumber, string $cellName, int $accessMode = XlsxFastEditor::ACCESS_MODE_NULL): ?XlsxFastEditorCell
 	{
-		if (!ctype_alnum($cellName)) {
-			throw new XlsxFastEditorInputException("Invalid cell reference {$cellName}! ");
-		}
-		$cellName = strtoupper($cellName);
-
 		$dom = $this->getDomFromPath(self::getWorksheetPath($sheetNumber));
 		$xpath = new \DOMXPath($dom);
 		$xpath->registerNamespace('o', self::OXML_NAMESPACE);
 
-		$f = null;
-		$fs = $xpath->query("(/o:worksheet/o:sheetData/o:row/o:c[@r='$cellName'])[1]/o:f[1]");
-		if ($fs !== false && $fs->length > 0) {
-			$f = $fs[0];
-			if (!($f instanceof \DOMElement)) {
-				throw new XlsxFastEditorXmlException("Error querying XML fragment for cell formula {$sheetNumber}/{$cellName}!");
+		if (!ctype_alnum($cellName)) {
+			throw new XlsxFastEditorInputException("Invalid cell reference {$cellName}!");
+		}
+		$cellName = strtoupper($cellName);
+
+		$c = null;
+		$cs = $xpath->query("/o:worksheet/o:sheetData/o:row/o:c[@r='{$cellName}'][1]");
+		$c = null;
+		if ($cs !== false && $cs->length > 0) {
+			$c = $cs[0];
+			if (!($c instanceof \DOMElement)) {
+				throw new XlsxFastEditorXmlException("Error querying XML fragment for cell {$sheetNumber}/{$cellName}!");
 			}
 		}
-		return $f;
+
+		if ($c === null) {
+			// The cell <c> was not found
+
+			switch ($accessMode) {
+				case XlsxFastEditor::ACCESS_MODE_EXCEPTION:
+					throw new XlsxFastEditorInputException("Internal error accessing cell {$sheetNumber}/{$cellName}!");
+				case XlsxFastEditor::ACCESS_MODE_AUTOCREATE:
+					$rowNumber = (int)preg_replace('/[^\d]+/', '', $cellName);
+					if ($rowNumber === 0) {
+						throw new XlsxFastEditorInputException("Invalid cell reference {$cellName}!");
+					}
+					$row = $this->getRow($sheetNumber, $rowNumber, $accessMode);
+					return $row->getCell($cellName, $accessMode);
+				default:
+				case XlsxFastEditor::ACCESS_MODE_NULL:
+					return null;
+			}
+		}
+
+		return new XlsxFastEditorCell($this, $sheetNumber, $c);
 	}
 
 	/**
@@ -340,39 +476,8 @@ final class XlsxFastEditor
 	 */
 	public function readFormula(int $sheetNumber, string $cellName): ?string
 	{
-		$f = $this->getF($sheetNumber, $cellName);
-		if ($f === null || !is_string($f->nodeValue) || $f->nodeValue === '') {
-			return null;
-		}
-		return '=' . $f->nodeValue;
-	}
-
-	/**
-	 * Access the DOMElement representing a cell value `<v>` in the worksheet.
-	 *
-	 * @param int $sheetNumber Worksheet number (base 1)
-	 * @param $cellName Cell name such as `B4`
-	 */
-	private function getV(int $sheetNumber, string $cellName): ?\DOMElement
-	{
-		if (!ctype_alnum($cellName)) {
-			throw new XlsxFastEditorInputException("Invalid cell reference {$cellName}!");
-		}
-		$cellName = strtoupper($cellName);
-
-		$dom = $this->getDomFromPath(self::getWorksheetPath($sheetNumber));
-		$xpath = new \DOMXPath($dom);
-		$xpath->registerNamespace('o', self::OXML_NAMESPACE);
-
-		$v = null;
-		$vs = $xpath->query("(/o:worksheet/o:sheetData/o:row/o:c[@r='$cellName'])[1]/o:v[1]");
-		if ($vs !== false && $vs->length > 0) {
-			$v = $vs[0];
-			if (!($v instanceof \DOMElement)) {
-				throw new XlsxFastEditorXmlException("Error querying XML fragment for cell value {$sheetNumber}/{$cellName}!");
-			}
-		}
-		return $v;
+		$cell = $this->getCell($sheetNumber, $cellName, XlsxFastEditor::ACCESS_MODE_NULL);
+		return $cell === null ? null : $cell->readFormula();
 	}
 
 	/**
@@ -383,11 +488,8 @@ final class XlsxFastEditor
 	 */
 	public function readFloat(int $sheetNumber, string $cellName): ?float
 	{
-		$v = $this->getV($sheetNumber, $cellName);
-		if ($v === null || !is_string($v->nodeValue) || !is_numeric($v->nodeValue)) {
-			return null;
-		}
-		return (float)$v->nodeValue;
+		$cell = $this->getCell($sheetNumber, $cellName, XlsxFastEditor::ACCESS_MODE_NULL);
+		return $cell === null ? null : $cell->readFloat();
 	}
 
 	/**
@@ -398,18 +500,16 @@ final class XlsxFastEditor
 	 */
 	public function readInt(int $sheetNumber, string $cellName): ?int
 	{
-		$v = $this->getV($sheetNumber, $cellName);
-		if ($v === null || !is_string($v->nodeValue) || !is_numeric($v->nodeValue)) {
-			return null;
-		}
-		return (int)$v->nodeValue;
+		$cell = $this->getCell($sheetNumber, $cellName, XlsxFastEditor::ACCESS_MODE_NULL);
+		return $cell === null ? null : $cell->readInt();
 	}
 
 	/**
 	 * Access a string stored in the shared strings list.
 	 * @param int $stringNumber String number (ID), base 0.
+	 * @internal
 	 */
-	public function getSharedString(int $stringNumber): ?string
+	public function _getSharedString(int $stringNumber): ?string
 	{
 		$dom = $this->getDomFromPath(self::SHARED_STRINGS_PATH);
 		$xpath = new \DOMXPath($dom);
@@ -437,202 +537,13 @@ final class XlsxFastEditor
 	 */
 	public function readString(int $sheetNumber, string $cellName): ?string
 	{
-		$v = $this->getV($sheetNumber, $cellName);
-		if ($v === null || !is_string($v->nodeValue)) {
-			return null;
-		}
-		$c = $v->parentNode;
-		if ($c === null || !($c instanceof \DOMElement)) {
-			throw new XlsxFastEditorXmlException("Error querying XML fragment for cell {$sheetNumber}/{$cellName}!");
-		}
-
-		if ($c->getAttribute('t') === 's') {
-			// Shared string
-
-			if (!ctype_digit($v->nodeValue)) {
-				throw new XlsxFastEditorXmlException("Error querying XML fragment for shared string {$sheetNumber}/{$cellName}!");
-			}
-			return $this->getSharedString((int)$v->nodeValue);
-		} else {
-			// Local value
-			return $v->nodeValue;
-		}
-	}
-
-	/**
-	 * Defines the *Full calculation on load* policy for the specified worksheet.
-	 * @param int $sheetNumber Worksheet number (base 1)
-	 */
-	public function setFullCalcOnLoad(int $sheetNumber, bool $value): void
-	{
-		$this->mustClearCalcChain = true;
-		$dom = $this->getDomFromPath(self::getWorksheetPath($sheetNumber));
-		$sheetCalcPr = null;
-		$sheetCalcPrs = $dom->getElementsByTagName('sheetCalcPr');
-		if ($sheetCalcPrs->length > 0) {
-			$sheetCalcPr = $sheetCalcPrs[0];
-		} else {
-			$sheetDatas = $dom->getElementsByTagName('sheetData');
-			if ($sheetDatas->length > 0) {
-				$sheetData = $sheetDatas[0];
-				if ($sheetData instanceof \DOMElement) {
-					$sheetCalcPr = $dom->createElement('sheetCalcPr');
-					if ($sheetCalcPr !== false && $sheetData->parentNode !== null) {
-						$sheetData->parentNode->insertBefore($sheetCalcPr, $sheetData->nextSibling);
-					}
-				}
-			}
-		}
-		if ($sheetCalcPr instanceof \DOMElement) {
-			$sheetCalcPr->setAttribute('fullCalcOnLoad', $value ? 'true' : 'false');
-			$this->touchWorksheet($sheetNumber);
-		}
-	}
-
-	/**
-	 * Sort cells within the same line, such as B3, AA3. Compare only the column part.
-	 * @param $ref1 A cell reference such as B3
-	 * @param $ref1 A cell reference such as AA3
-	 * @return int -1 if $ref1 is before $ref2; 1 if $ref1 is greater than $ref2, and 0 if they are equal.
-	 */
-	private static function columnOrderCompare(string $ref1, string $ref2): int
-	{
-		$pattern = '/[^A-Z]+/';
-		$column1 = preg_replace($pattern, '', $ref1) ?? '';
-		$column2 = preg_replace($pattern, '', $ref2) ?? '';
-		$length1 = strlen($column1);
-		$length2 = strlen($column2);
-		if ($length1 !== $length2) {
-			return $length1 <=> $length2;
-		}
-		return strcmp($ref1, $ref2);
-	}
-
-	/**
-	 * Access the DOMElement representing a cell in the worksheet.
-	 * Creates it if necessary.
-	 *
-	 * @param int $sheetNumber Worksheet number (base 1)
-	 * @param $cellName Cell name such as `B4`
-	 * @param bool $autoCreate Set to true to automatically create a cell if it does not exist already, false to make no change.
-	 */
-	private function getCell(int $sheetNumber, string $cellName, bool $autoCreate): ?\DOMElement
-	{
-		$dom = $this->getDomFromPath(self::getWorksheetPath($sheetNumber));
-		$xpath = new \DOMXPath($dom);
-		$xpath->registerNamespace('o', self::OXML_NAMESPACE);
-
-		if (!ctype_alnum($cellName)) {
-			throw new XlsxFastEditorInputException("Invalid cell reference {$cellName}!");
-		}
-		$cellName = strtoupper($cellName);
-
-		$c = null;
-		$cs = $xpath->query("/o:worksheet/o:sheetData/o:row/o:c[@r='{$cellName}'][1]");
-		if ($cs !== false && $cs->length > 0) {
-			$c = $cs[0];
-			if (!($c instanceof \DOMElement)) {
-				throw new XlsxFastEditorXmlException("Error querying XML fragment for cell {$sheetNumber}/{$cellName}!");
-			}
-		}
-
-		if ($c === null && $autoCreate) {
-			// The cell <c> was not found
-
-			$rowNumber = (int)preg_replace('/[^\d]+/', '', $cellName);
-			if ($rowNumber === 0) {
-				throw new XlsxFastEditorInputException("Invalid cell reference {$cellName}!");
-			}
-
-			$row = null;
-			$rows = $xpath->query("/o:worksheet/o:sheetData/o:row[@r='{$rowNumber}'][1]");
-			if ($rows !== false && $rows->length > 0) {
-				$row = $rows[0];
-				if (!($row instanceof \DOMElement)) {
-					throw new XlsxFastEditorXmlException("Error querying XML fragment for cell {$sheetNumber}/{$cellName}!");
-				}
-			}
-
-			if ($row === null) {
-				// The <row> was not found
-
-				$sheetDatas = $dom->getElementsByTagName('sheetData');
-				if ($sheetDatas->length === 0) {
-					throw new XlsxFastEditorXmlException("Cannot find sheetData for worksheet {$sheetNumber}!");
-				}
-				$sheetData = $sheetDatas[0];
-				if (!($sheetData instanceof \DOMElement)) {
-					throw new XlsxFastEditorXmlException("Error querying XML fragment for worksheet {$sheetNumber}!");
-				}
-				$row = $dom->createElement('row');
-				if ($row === false) {
-					throw new XlsxFastEditorXmlException("Error creating row {$sheetNumber}/{$rowNumber}!");
-				}
-				$row->setAttribute('r', (string)$rowNumber);
-
-				// Excel expects the lines to be sorted
-				$sibling = $sheetData->firstElementChild;
-				while ($sibling !== null && (int)$sibling->getAttribute('r') < $rowNumber) {
-					$sibling = $sibling->nextElementSibling;
-				}
-				$sheetData->insertBefore($row, $sibling);
-			}
-
-			$c = $dom->createElement('c');
-			if ($c === false) {
-				throw new XlsxFastEditorXmlException("Error creating cell {$sheetNumber}/{$cellName}!");
-			}
-			$c->setAttribute('r', $cellName);
-
-			// Excel expects the cells to be sorted
-			$sibling = $row->firstElementChild;
-			while ($sibling !== null && self::columnOrderCompare($sibling->getAttribute('r'), $cellName) < 0) {
-				$sibling = $sibling->nextElementSibling;
-			}
-			$row->insertBefore($c, $sibling);
-		}
-
-		return $c;
-	}
-
-	/**
-	 * Clean a cell to have its value written.
-	 * @param \DOMElement $c A `<c>` cell element.
-	 * @return \DOMElement The `<v>` value element of the provided cell, or null in case of error.
-	 */
-	private function initCellValue(\DOMElement $c): \DOMElement
-	{
-		$v = null;
-		$c->removeAttribute('t');	// Remove type, if it exists
-		for ($i = $c->childNodes->length - 1; $i >= 0; $i--) {
-			// Remove all childs except <v>
-			$child = $c->childNodes[$i];
-			if ($child instanceof \DOMElement) {
-				if ($child->localName === 'v') {
-					$v = $child;
-				} else {
-					if ($child->localName === 'f') {
-						// This cell had a formula. Must clear calcChain:
-						$this->mustClearCalcChain = true;
-					}
-					$c->removeChild($child);
-				}
-			}
-		}
-		if ($v === null) {
-			// There was no existing <v>
-			$v = $c->ownerDocument === null ? null : $c->ownerDocument->createElement('v');
-			if ($v == false) {
-				throw new XlsxFastEditorXmlException('Error creating value for cell!');
-			}
-			$c->appendChild($v);
-		}
-
-		return $v;
+		$cell = $this->getCell($sheetNumber, $cellName, XlsxFastEditor::ACCESS_MODE_NULL);
+		return $cell === null ? null : $cell->readString();
 	}
 
 	/**
 	 * Write a formulat in the given worksheet at the given cell location, without changing the type/style of the cell.
+	 * Auto-creates the cell if it does not already exists.
 	 * Removes the formulas of the cell, if any.
 	 *
 	 * @param int $sheetNumber Worksheet number (base 1)
@@ -640,61 +551,13 @@ final class XlsxFastEditor
 	 */
 	public function writeFormula(int $sheetNumber, string $cellName, string $value): void
 	{
-		$c = $this->getCell($sheetNumber, $cellName, true);
-		if ($c === null) {
-			throw new XlsxFastEditorInputException("Internal error accessing cell {$sheetNumber}/{$cellName}!");
-		}
-
-		$value = ltrim($value, '=');
-
-		$vs = $c->getElementsByTagName('v');
-		for ($i = $vs->length - 1; $i >= 0; $i--) {
-			$v = $vs[$i];
-			if ($v instanceof \DOMElement) {
-				$c->removeChild($v);
-			}
-		}
-
-		$fs = $c->getElementsByTagName('f');
-		for ($i = $fs->length - 1; $i >= 0; $i--) {
-			$f = $fs[$i];
-			if ($f instanceof \DOMElement) {
-				$c->removeChild($f);
-			}
-		}
-
-		$dom = $c->ownerDocument;
-		if ($dom === null) {
-			throw new XlsxFastEditorInputException("Internal error accessing cell {$sheetNumber}/{$cellName}!");
-		}
-		$f = $dom->createElement('f', $value);
-		$c->appendChild($f);
-
-		$this->mustClearCalcChain = true;
-		$this->touchWorksheet($sheetNumber);
+		$cell = $this->getCell($sheetNumber, $cellName, XlsxFastEditor::ACCESS_MODE_AUTOCREATE);
+		$cell->writeFormula($value);
 	}
 
 	/**
 	 * Write a number in the given worksheet at the given cell location, without changing the type/style of the cell.
-	 * Removes the formulas of the cell, if any.
-	 *
-	 * @param int $sheetNumber Worksheet number (base 1)
-	 * @param $cellName Cell name such as `B4`
-	 * @param int|float $value
-	 */
-	private function writeNumber(int $sheetNumber, string $cellName, $value): void
-	{
-		$c = $this->getCell($sheetNumber, $cellName, true);
-		if ($c === null) {
-			throw new XlsxFastEditorInputException("Internal error accessing cell {$sheetNumber}/{$cellName}!");
-		}
-		$v = $this->initCellValue($c);
-		$v->nodeValue = (string)$value;
-		$this->touchWorksheet($sheetNumber);
-	}
-
-	/**
-	 * Write a number in the given worksheet at the given cell location, without changing the type/style of the cell.
+	 * Auto-creates the cell if it does not already exists.
 	 * Removes the formulas of the cell, if any.
 	 *
 	 * @param int $sheetNumber Worksheet number (base 1)
@@ -703,11 +566,13 @@ final class XlsxFastEditor
 	 */
 	public function writeFloat(int $sheetNumber, string $cellName, float $value): void
 	{
-		$this->writeNumber($sheetNumber, $cellName, $value);
+		$cell = $this->getCell($sheetNumber, $cellName, XlsxFastEditor::ACCESS_MODE_AUTOCREATE);
+		$cell->writeFloat($value);
 	}
 
 	/**
 	 * Write a number in the given worksheet at the given cell location, without changing the type/style of the cell.
+	 * Auto-creates the cell if it does not already exists.
 	 * Removes the formulas of the cell, if any.
 	 *
 	 * @param int $sheetNumber Worksheet number (base 1)
@@ -716,15 +581,17 @@ final class XlsxFastEditor
 	 */
 	public function writeInt(int $sheetNumber, string $cellName, int $value): void
 	{
-		$this->writeNumber($sheetNumber, $cellName, $value);
+		$cell = $this->getCell($sheetNumber, $cellName, XlsxFastEditor::ACCESS_MODE_AUTOCREATE);
+		$cell->writeInt($value);
 	}
 
 	/**
 	 * Adds a new shared string and returns its ID.
+	 * @internal
 	 * @param string $value Value of the new shared string.
 	 * @return int the ID of the new shared string.
 	 */
-	private function makeNewSharedString(string $value): int
+	public function _makeNewSharedString(string $value): int
 	{
 		$dom = $this->getDomFromPath(self::SHARED_STRINGS_PATH);
 		if ($dom->firstElementChild === null) {
@@ -754,6 +621,7 @@ final class XlsxFastEditor
 
 	/**
 	 * Write a string in the given worksheet at the given cell location, without changing the type/style of the cell.
+	 * Auto-creates the cell if it does not already exists.
 	 * Removes the formulas of the cell, if any.
 	 *
 	 * @param int $sheetNumber Worksheet number (base 1)
@@ -761,15 +629,8 @@ final class XlsxFastEditor
 	 */
 	public function writeString(int $sheetNumber, string $cellName, string $value): void
 	{
-		$c = $this->getCell($sheetNumber, $cellName, true);
-		if ($c === null) {
-			throw new XlsxFastEditorInputException("Internal error accessing cell {$sheetNumber}/{$cellName}!");
-		}
-		$v = self::initCellValue($c);
-		$c->setAttribute('t', 's');	// Type shared string
-		$sharedStringId = self::makeNewSharedString($value);
-		$v->nodeValue = (string)$sharedStringId;
-		$this->touchWorksheet($sheetNumber);
+		$cell = $this->getCell($sheetNumber, $cellName, XlsxFastEditor::ACCESS_MODE_AUTOCREATE);
+		$cell->writeString($value);
 	}
 
 	/**
