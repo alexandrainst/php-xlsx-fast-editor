@@ -65,6 +65,7 @@ try {
 	$xlsxFastEditor->writeFormula($sheet1, 'c2', '=2*3');
 	$xlsxFastEditor->writeString($sheet1, 'b4', 'α');
 	$xlsxFastEditor->writeHyperlink($sheet1, 'B4', 'https://example.org/');
+	assert($xlsxFastEditor->writeHyperlink($sheet1, 'C3', 'https://example.org/') === false);
 	$xlsxFastEditor->writeInt($sheet1, 'c4', 15);
 	$xlsxFastEditor->writeFloat($sheet1, 'd4', -66.6);
 
