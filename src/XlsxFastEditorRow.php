@@ -139,7 +139,7 @@ final class XlsxFastEditorRow
 
 			// Excel expects the cells to be sorted
 			$sibling = $this->r->firstElementChild;
-			while ($sibling !== null && XlsxFastEditor::_columnOrderCompare($sibling->getAttribute('r'), $cellName) < 0) {
+			while ($sibling !== null && XlsxFastEditor::cellOrderCompare($sibling->getAttribute('r'), $cellName) < 0) {
 				$sibling = $sibling->nextElementSibling;
 			}
 			$this->r->insertBefore($c, $sibling);

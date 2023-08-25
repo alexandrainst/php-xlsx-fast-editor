@@ -46,6 +46,17 @@ final class XlsxFastEditorCell
 	}
 
 	/**
+	 * Column name (e.g., `'D'`).
+	 */
+	public function column(): string
+	{
+		if (preg_match('/^([A-Z]+)/', $this->name(), $matches) == 0 || empty($matches[1])) {
+			throw new XlsxFastEditorXmlException("Error querying column name for cell {$this->name()}!");
+		}
+		return $matches[1];
+	}
+
+	/**
 	 * Access the previous existing cell, if any, null otherwise.
 	 */
 	public function getPreviousCell(): ?XlsxFastEditorCell
@@ -153,7 +164,6 @@ final class XlsxFastEditorCell
 
 		if ($this->c->getAttribute('t') === 's') {
 			// Shared string
-
 			if (!ctype_digit($value)) {
 				throw new XlsxFastEditorXmlException("Error querying XML fragment for shared string in cell {$this->name()}!");
 			}

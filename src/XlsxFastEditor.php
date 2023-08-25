@@ -380,21 +380,71 @@ final class XlsxFastEditor
 	}
 
 	/**
-	 * Sort cells within the same line, such as B3, AA3. Compare only the column part.
-	 * @param $ref1 A cell reference such as B3
-	 * @param $ref1 A cell reference such as AA3
-	 * @return int -1 if $ref1 is before $ref2; 1 if $ref1 is greater than $ref2, and 0 if they are equal.
-	 * @internal
+	 * Produce an array from a worksheet, indexed by column name (like `AB`) first, then line (like `12`).
+	 * Only the existing lines and cells are included.
+	 * @return array<string,array<int,null|string>> An array that can be access like `$array['AB'][12]`
 	 */
-	public static function _columnOrderCompare(string $ref1, string $ref2): int
+	public function readArray(int $sheetNumber): array
 	{
-		$pattern = '/[^A-Z]+/';
-		$column1 = preg_replace($pattern, '', $ref1) ?? '';
-		$column2 = preg_replace($pattern, '', $ref2) ?? '';
-		$length1 = strlen($column1);
-		$length2 = strlen($column2);
-		if ($length1 !== $length2) {
-			return $length1 <=> $length2;
+		$table = [];
+		foreach ($this->rowsIterator($sheetNumber) as $row) {
+			foreach ($row->cellsIterator() as $cell) {
+				$table[$cell->column()][$row->number()] = $cell->readString();
+			}
+		}
+		return $table;
+	}
+
+	/**
+	 * Produce an array from a worksheet, indexed by column header (like `columnName`) first, then line (like `12`),
+	 * having the column header defined in the first existing line of the spreadsheet.
+	 * Only the existing lines and cells are included.
+	 * @return array<string,array<int,null|string>> An array that can be access like `$array['columnName'][12]`
+	 */
+	public function readArrayWithHeaders(int $sheetNumber): array
+	{
+		$table = [];
+		$headers = [];
+		$firstRow = true;
+		foreach ($this->rowsIterator($sheetNumber) as $row) {
+			if ($firstRow) {
+				foreach ($row->cellsIterator() as $cell) {
+					$headers[$cell->column()] = $cell->readString();
+				}
+				$firstRow = false;
+				continue;
+			}
+			foreach ($row->cellsIterator() as $cell) {
+				$header = $headers[$cell->column()] ?? $cell->column();
+				$table[$header][$row->number()] = $cell->readString();
+			}
+		}
+		return $table;
+	}
+
+	/**
+	 * Sort cells (such as `B3`, `AA23`) on column first (such as `B`, `AA`) and then line (such as `3`, `23`).
+	 * @param $ref1 A cell reference such as `B3`
+	 * @param $ref1 A cell reference such as `AA23`
+	 * @return int -1 if $ref1 is before $ref2; 1 if $ref1 is greater than $ref2, and 0 if they are equal.
+	 */
+	public static function cellOrderCompare(string $ref1, string $ref2): int
+	{
+		if (preg_match('/^([A-Z]+)(\d+)$/', $ref1, $matches1) === 1 && preg_match('/^([A-Z]+)(\d+)$/', $ref2, $matches2) === 1) {
+			$column1 = $matches1[1];
+			$column2 = $matches2[1];
+			$length1 = strlen($column1);
+			$length2 = strlen($column2);
+			if ($length1 !== $length2) {
+				return $length1 <=> $length2;
+			}
+			$cmp = strcmp($column1, $column2);
+			if ($cmp !== 0) {
+				return $cmp;
+			}
+			$line1 = (int)$matches1[2];
+			$line2 = (int)$matches2[2];
+			return $line1 <=> $line2;
 		}
 		return strcmp($ref1, $ref2);
 	}

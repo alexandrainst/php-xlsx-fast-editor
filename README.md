@@ -66,6 +66,13 @@ try {
 	$xlsxFastEditor->writeString($worksheetId1, 'D4', 'Hello');
 	$xlsxFastEditor->writeHyperlink($sheet1, 'B4', 'https://example.net/');	// Only for cells with an existing hyperlink
 
+	// Read as array
+	$table = $xlsxFastEditor->readArray($sheet1);
+	$s = $table['B'][2];
+
+	$table = $xlsxFastEditor->readArrayWithHeaders($sheet1);
+	$s = $table['columnName'][2];
+
 	// Regex search & replace operating globally on all the worksheets:
 	$xlsxFastEditor->textReplace('/Hello/i', 'World');
 
@@ -88,6 +95,7 @@ try {
 
 	// Methods for cells
 	$cellName = $cell->name();
+	$columnName = $cell->column();
 	$fx = $cell->readFormula();
 	$f = $cell->readFloat();
 	$i = $cell->readInt();

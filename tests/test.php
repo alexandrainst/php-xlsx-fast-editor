@@ -42,6 +42,9 @@ try {
 	assert($xlsxFastEditor->readInt($sheet2, 'c3') === -5 * 2);
 	assert($xlsxFastEditor->readString($sheet2, 'B3') === 'déjà-vu');
 
+	assert($xlsxFastEditor->readArray($sheet1)['B'][2] === 'Hello');
+	assert($xlsxFastEditor->readArrayWithHeaders($sheet1)['Strings'][2] === 'Hello');
+
 	// Navigation
 	assert($xlsxFastEditor->getFirstRow($sheet1)?->number() === 1);
 	assert($xlsxFastEditor->getRow($sheet1, 1)?->getFirstCell()?->name() === 'A1');
@@ -49,6 +52,14 @@ try {
 	assert($xlsxFastEditor->getRow($sheet1, 3)?->getLastCell()?->name() === 'E3');
 	assert($xlsxFastEditor->getRow($sheet1, 4)?->getCell('D4')?->name() === 'D4');
 	assert($xlsxFastEditor->getLastRow($sheet1)?->number() === 4);
+
+	assert(XlsxFastEditor::cellOrderCompare('B3', 'AA23') < 0);
+	assert(XlsxFastEditor::cellOrderCompare('AA23', 'AB23') < 0);
+	assert(XlsxFastEditor::cellOrderCompare('BB22', 'BB123') < 0);
+	assert(XlsxFastEditor::cellOrderCompare('AA23', 'AA23') === 0);
+	assert(XlsxFastEditor::cellOrderCompare('AA23', 'B3') > 0);
+	assert(XlsxFastEditor::cellOrderCompare('AB23', 'AA23') > 0);
+	assert(XlsxFastEditor::cellOrderCompare('BB123', 'BB22') > 0);
 
 	// Iterators
 	$nb = 0;
