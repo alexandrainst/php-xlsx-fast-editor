@@ -18,6 +18,7 @@ try {
 	assert($xlsxFastEditor->getWorksheetCount() === 2);
 
 	assert($xlsxFastEditor->getWorkbookDateSystem() === 1900);
+	echo json_encode(XlsxFastEditor::excelDateToDateTime(0.5, 1900)->format('c')), "\n";
 	assert(XlsxFastEditor::excelDateToDateTime(0.5, 1900)->format('c') === '1900-01-01T12:00:00+01:00');
 	assert(XlsxFastEditor::excelDateToDateTime(32, 1900)->format('c') === '1900-02-01T00:00:00+01:00');
 	assert(XlsxFastEditor::excelDateToDateTime(44865, 1904)->format('c') === '2026-11-01T00:00:00+01:00');
