@@ -59,6 +59,7 @@ try {
 	$i = $xlsxFastEditor->readInt($worksheetId1, 'C3');
 	$s = $xlsxFastEditor->readString($worksheetId1, 'D4');
 	$h = $xlsxFastEditor->readHyperlink($worksheetId1, 'B4');
+	$d = $xlsxFastEditor->readDateTime($worksheetId1, 'F4');
 	$xlsxFastEditor->deleteRow($worksheetId1, 5);
 	$xlsxFastEditor->writeFormula($worksheetId1, 'A1', '=B2*3');
 	$xlsxFastEditor->writeFloat($worksheetId1, 'B2', 3.14);
@@ -101,6 +102,7 @@ try {
 	$i = $cell->readInt();
 	$s = $cell->readString();
 	$h = $cell->readHyperlink();
+	$d = $cell->readDateTime();
 	$cell->writeFormula('=B2*3');
 	$cell->writeFloat(3.14);
 	$cell->writeInt(13);
