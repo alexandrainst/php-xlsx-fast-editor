@@ -17,11 +17,11 @@ try {
 
 	assert($xlsxFastEditor->getWorksheetCount() === 2);
 
+	date_default_timezone_set('UTC');
 	assert($xlsxFastEditor->getWorkbookDateSystem() === 1900);
-	echo json_encode(XlsxFastEditor::excelDateToDateTime(0.5, 1900)->format('c')), "\n";
-	assert(XlsxFastEditor::excelDateToDateTime(0.5, 1900)->format('c') === '1900-01-01T12:00:00+01:00');
-	assert(XlsxFastEditor::excelDateToDateTime(32, 1900)->format('c') === '1900-02-01T00:00:00+01:00');
-	assert(XlsxFastEditor::excelDateToDateTime(44865, 1904)->format('c') === '2026-11-01T00:00:00+01:00');
+	assert(XlsxFastEditor::excelDateToDateTime(0.5, 1900)->format('c') === '1900-01-01T12:00:00+00:00');
+	assert(XlsxFastEditor::excelDateToDateTime(32, 1900)->format('c') === '1900-02-01T00:00:00+00:00');
+	assert(XlsxFastEditor::excelDateToDateTime(44865, 1904)->format('c') === '2026-11-01T00:00:00+00:00');
 
 	$sheet1 = $xlsxFastEditor->getWorksheetNumber('Sheet1');
 	assert($sheet1 === 1);
@@ -48,9 +48,9 @@ try {
 	assert($xlsxFastEditor->readInt($sheet2, 'c3') === -5 * 2);
 	assert($xlsxFastEditor->readString($sheet2, 'B3') === 'déjà-vu');
 
-	assert($xlsxFastEditor->readDate($sheet1, 'F2')?->format('c') === '1980-11-24T00:00:00+01:00');
-	assert($xlsxFastEditor->readDate($sheet1, 'F3')?->format('c') === '1980-11-24T10:20:30+01:00');
-	assert($xlsxFastEditor->readDate($sheet1, 'F4')?->format('c') === '1900-01-01T10:20:30+01:00');
+	assert($xlsxFastEditor->readDate($sheet1, 'F2')?->format('c') === '1980-11-24T00:00:00+00:00');
+	assert($xlsxFastEditor->readDate($sheet1, 'F3')?->format('c') === '1980-11-24T10:20:30+00:00');
+	assert($xlsxFastEditor->readDate($sheet1, 'F4')?->format('c') === '1900-01-01T10:20:30+00:00');
 
 	assert($xlsxFastEditor->readArray($sheet1)['B'][2] === 'Hello');
 	assert($xlsxFastEditor->readArrayWithHeaders($sheet1)['Strings'][2] === 'Hello');
