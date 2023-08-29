@@ -48,9 +48,9 @@ try {
 	assert($xlsxFastEditor->readInt($sheet2, 'c3') === -5 * 2);
 	assert($xlsxFastEditor->readString($sheet2, 'B3') === 'déjà-vu');
 
-	assert($xlsxFastEditor->readDate($sheet1, 'F2')?->format('c') === '1980-11-24T00:00:00+00:00');
-	assert($xlsxFastEditor->readDate($sheet1, 'F3')?->format('c') === '1980-11-24T10:20:30+00:00');
-	assert($xlsxFastEditor->readDate($sheet1, 'F4')?->format('c') === '1900-01-01T10:20:30+00:00');
+	assert($xlsxFastEditor->readDateTime($sheet1, 'F2')?->format('c') === '1980-11-24T00:00:00+00:00');
+	assert($xlsxFastEditor->readDateTime($sheet1, 'F3')?->format('c') === '1980-11-24T10:20:30+00:00');
+	assert($xlsxFastEditor->readDateTime($sheet1, 'F4')?->format('c') === '1900-01-01T10:20:30+00:00');
 
 	assert($xlsxFastEditor->readArray($sheet1)['B'][2] === 'Hello');
 	assert($xlsxFastEditor->readArrayWithHeaders($sheet1)['Strings'][2] === 'Hello');

@@ -599,7 +599,7 @@ final class XlsxFastEditor
 	 * @param int $sheetNumber Worksheet number (base 1)
 	 * @param $cellName Cell name such as `B4`
 	 */
-	public function readDate(int $sheetNumber, string $cellName): ?\DateTimeImmutable
+	public function readDateTime(int $sheetNumber, string $cellName): ?\DateTimeImmutable
 	{
 		$cell = $this->getCell($sheetNumber, $cellName, XlsxFastEditor::ACCESS_MODE_NULL);
 		return $cell === null ? null : $cell->readDateTime();
