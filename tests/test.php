@@ -17,6 +17,11 @@ try {
 
 	assert($xlsxFastEditor->getWorksheetCount() === 2);
 
+	assert($xlsxFastEditor->getWorkbookDateSystem() === 1900);
+	assert(XlsxFastEditor::excelDateToDateTime(0.5, 1900)->format('c') === '1900-01-01T12:00:00+01:00');
+	assert(XlsxFastEditor::excelDateToDateTime(32, 1900)->format('c') === '1900-02-01T00:00:00+01:00');
+	assert(XlsxFastEditor::excelDateToDateTime(44865, 1904)->format('c') === '2026-11-01T00:00:00+01:00');
+
 	$sheet1 = $xlsxFastEditor->getWorksheetNumber('Sheet1');
 	assert($sheet1 === 1);
 
@@ -42,6 +47,10 @@ try {
 	assert($xlsxFastEditor->readInt($sheet2, 'c3') === -5 * 2);
 	assert($xlsxFastEditor->readString($sheet2, 'B3') === 'déjà-vu');
 
+	assert($xlsxFastEditor->readDate($sheet1, 'F2')?->format('c') === '1980-11-24T00:00:00+01:00');
+	assert($xlsxFastEditor->readDate($sheet1, 'F3')?->format('c') === '1980-11-24T10:20:30+01:00');
+	assert($xlsxFastEditor->readDate($sheet1, 'F4')?->format('c') === '1900-01-01T10:20:30+01:00');
+
 	assert($xlsxFastEditor->readArray($sheet1)['B'][2] === 'Hello');
 	assert($xlsxFastEditor->readArrayWithHeaders($sheet1)['Strings'][2] === 'Hello');
 
@@ -49,7 +58,7 @@ try {
 	assert($xlsxFastEditor->getFirstRow($sheet1)?->number() === 1);
 	assert($xlsxFastEditor->getRow($sheet1, 1)?->getFirstCell()?->name() === 'A1');
 	assert($xlsxFastEditor->getRow($sheet1, 2)?->number() === 2);
-	assert($xlsxFastEditor->getRow($sheet1, 3)?->getLastCell()?->name() === 'E3');
+	assert($xlsxFastEditor->getRow($sheet1, 3)?->getLastCell()?->name() === 'F3');
 	assert($xlsxFastEditor->getRow($sheet1, 4)?->getCell('D4')?->name() === 'D4');
 	assert($xlsxFastEditor->getLastRow($sheet1)?->number() === 4);
 
@@ -70,7 +79,7 @@ try {
 			$nb++;
 		}
 	}
-	assert($nb === 20);
+	assert($nb === 24);
 
 	// Writing existing cells
 	$xlsxFastEditor->writeFormula($sheet1, 'c2', '=2*3');

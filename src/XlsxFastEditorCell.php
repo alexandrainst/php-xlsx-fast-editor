@@ -140,6 +140,18 @@ final class XlsxFastEditorCell
 	}
 
 	/**
+	 * Read the date/time value of the cell, if any.
+	 */
+	public function readDateTime(): ?\DateTimeImmutable
+	{
+		$value = $this->readFloat();
+		if ($value === null) {
+			return null;
+		}
+		return XlsxFastEditor::excelDateToDateTime($value, $this->editor->getWorkbookDateSystem());
+	}
+
+	/**
 	 * Read the integer value of the cell.
 	 */
 	public function readInt(): ?int

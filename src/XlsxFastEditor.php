@@ -172,6 +172,67 @@ final class XlsxFastEditor
 	}
 
 	/**
+	 * Excel can either use a base date from year 1900 (Microsoft Windows) or from year 1904 (old Apple MacOS).
+	 * https://support.microsoft.com/en-us/office/date-systems-in-excel-e7fe7167-48a9-4b96-bb53-5612a800b487
+	 * @phpstan-return 1900|1904
+	 */
+	public function getWorkbookDateSystem(): int
+	{
+		static $baseYear = 0;
+		if ($baseYear == 0) {
+			$xpath = $this->getXPathFromPath(self::WORKBOOK_PATH);
+			$date1904 = $xpath->evaluate('normalize-space(/o:workbook/o:workbookPr/@date1904)');
+			if (is_string($date1904) && in_array(strtolower(trim($date1904)), ['true', '1'], true)) {
+				$baseYear = 1904;
+			} else {
+				$baseYear = 1900;
+			}
+		}
+		return $baseYear;
+	}
+
+	public static function excelDateToDateTime(float $excelDateTime, int $workbookDateSystem = 1900): \DateTimeImmutable
+	{
+		static $baseDate1900 = null;
+		static $baseDate1904 = null;
+		if ($workbookDateSystem === 1900) {
+			if ($excelDateTime < 1) {
+				// Make cells with only time (no date) to start on 1900-01-01
+				$excelDateTime++;
+			}
+			if ($excelDateTime < 60) {
+				// https://learn.microsoft.com/en-us/office/troubleshoot/excel/wrongly-assumes-1900-is-leap-year
+				$excelDateTime++;
+			}
+			// 1 January 1900 as serial number 1 in the 1900 Date System, accounting for leap year problem
+			if ($baseDate1900 === null) {
+				$baseDate1900 = new \DateTimeImmutable('1899-12-30');
+			}
+			$excelBaseDate = $baseDate1900;
+		} elseif ($workbookDateSystem === 1904) {
+			// 1 January 1904 as serial number 0 in the 1904 Date System
+			if ($baseDate1904 === null) {
+				$baseDate1904 = new \DateTimeImmutable('1904-01-01');
+			}
+			$excelBaseDate = $baseDate1904;
+		} else {
+			throw new \InvalidArgumentException('Invalid Excel workbook date system! Supported values: 1900, 1904');
+		}
+
+		$daysOffset = floor($excelDateTime);
+		$iso8601 = "P{$daysOffset}D";
+
+		$timeFraction = $excelDateTime - $daysOffset;
+		if ($timeFraction > 0) {
+			// Convert days to seconds with no more than milliseconds precision
+			$seconds = floor($timeFraction * 86400000) / 1000;
+			$iso8601 .= "T{$seconds}S";
+		}
+
+		return $excelBaseDate->add(new \DateInterval($iso8601));
+	}
+
+	/**
 	 * Count the number of worksheets in the workbook.
 	 */
 	public function getWorksheetCount(): int
@@ -530,6 +591,18 @@ final class XlsxFastEditor
 	{
 		$cell = $this->getCell($sheetNumber, $cellName, XlsxFastEditor::ACCESS_MODE_NULL);
 		return $cell === null ? null : $cell->readFloat();
+	}
+
+	/**
+	 * Read a date/time in the given worksheet at the given cell location.
+	 *
+	 * @param int $sheetNumber Worksheet number (base 1)
+	 * @param $cellName Cell name such as `B4`
+	 */
+	public function readDate(int $sheetNumber, string $cellName): ?\DateTimeImmutable
+	{
+		$cell = $this->getCell($sheetNumber, $cellName, XlsxFastEditor::ACCESS_MODE_NULL);
+		return $cell === null ? null : $cell->readDateTime();
 	}
 
 	/**
