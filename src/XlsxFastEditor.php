@@ -191,6 +191,11 @@ final class XlsxFastEditor
 		return $baseYear;
 	}
 
+	/**
+	 * Convert an internal Excel float representation of a date to a standard `DateTime`.
+	 * @param int $workbookDateSystem {@see XlsxFastEditor::getWorkbookDateSystem()}
+	 * @internal
+	 */
 	public static function excelDateToDateTime(float $excelDateTime, int $workbookDateSystem = 1900): \DateTimeImmutable
 	{
 		static $baseDate1900 = null;
