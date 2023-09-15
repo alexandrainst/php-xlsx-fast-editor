@@ -31,12 +31,15 @@ final class XlsxFastEditorRow
 		return (int)$this->r->getAttribute('r');
 	}
 
+	/**
+	 * @throws XlsxFastEditorXmlException
+	 */
 	private function getXPath(): \DOMXPath
 	{
 		if ($this->xpath === null) {
 			$dom = $this->r->ownerDocument;
 			if ($dom === null) {
-				throw new XlsxFastEditorInputException("Internal error accessing row {$this->number()}!");
+				throw new XlsxFastEditorXmlException("Internal error accessing row {$this->number()}!");
 			}
 			$xpath = new \DOMXPath($dom);
 			$xpath->registerNamespace('o', XlsxFastEditor::_OXML_NAMESPACE);
@@ -115,9 +118,16 @@ final class XlsxFastEditorRow
 	 * set to `XlsxFastEditor::ACCESS_MODE_AUTOCREATE` to auto-create the cell.
 	 * @return XlsxFastEditorCell|null A cell, potentially `null` if the cell does not exist and `$accessMode` is set to `XlsxFastEditor::ACCESS_MODE_NULL`
 	 * @phpstan-return ($accessMode is XlsxFastEditor::ACCESS_MODE_NULL ? XlsxFastEditorCell|null : XlsxFastEditorCell)
+	 * @internal
+	 * @throws \InvalidArgumentException if `$cellName` has an invalid format
+	 * @throws XlsxFastEditorInputException optionally if the corresponding cell does not exist, depending on choice of `$accessMode`
+	 * @throws XlsxFastEditorXmlException
 	 */
 	public function getCell(string $cellName, int $accessMode = XlsxFastEditor::ACCESS_MODE_NULL): ?XlsxFastEditorCell
 	{
+		if (!ctype_alnum($cellName)) {
+			throw new \InvalidArgumentException("Invalid cell reference {$cellName}!");
+		}
 		$xpath = $this->getXPath();
 		$cs = $xpath->query("./o:c[@r='$cellName'][1]", $this->r);
 		$c = null;
@@ -131,7 +141,11 @@ final class XlsxFastEditorRow
 		if ($c === null && $accessMode === XlsxFastEditor::ACCESS_MODE_AUTOCREATE) {
 			// The cell <c> was not found
 			$dom = $xpath->document;
-			$c = $dom->createElement('c');
+			try {
+				$c = $dom->createElement('c');
+			} catch (\DOMException $dex) {
+				throw new XlsxFastEditorXmlException("Error creating cell {$this->sheetNumber}/{$cellName}!", $dex->code, $dex);
+			}
 			if ($c === false) {
 				throw new XlsxFastEditorXmlException("Error creating cell {$this->sheetNumber}/{$cellName}!");
 			}
@@ -153,6 +167,40 @@ final class XlsxFastEditorRow
 		}
 
 		return new XlsxFastEditorCell($this->editor, $this->sheetNumber, $c);
+	}
+
+	/**
+	 * Get the cell of the given name, or null if if does not exist.
+	 * @param $cellName Cell name such as `B4`
+	 * @return XlsxFastEditorCell|null A cell, potentially `null` if the cell does not exist
+	 * @throws \InvalidArgumentException if `$cellName` has an invalid format
+	 * @throws XlsxFastEditorXmlException
+	 */
+	public function getCellOrNull(string $cellName): ?XlsxFastEditorCell
+	{
+		try {
+			return $this->getCell($cellName, XlsxFastEditor::ACCESS_MODE_NULL);
+		} catch (XlsxFastEditorInputException $iex) {
+			// Will not happen
+			return null;
+		}
+	}
+
+	/**
+	 * Get the cell of the given name, or autocreate it if it does not already exist.
+	 * @param $cellName Cell name such as `B4`
+	 * @return XlsxFastEditorCell A cell
+	 * @throws \InvalidArgumentException if `$cellName` has an invalid format
+	 * @throws XlsxFastEditorXmlException
+	 */
+	public function getCellAutocreate(string $cellName): XlsxFastEditorCell
+	{
+		try {
+			return $this->getCell($cellName, XlsxFastEditor::ACCESS_MODE_AUTOCREATE);
+		} catch (XlsxFastEditorInputException $iex) {
+			// Will not happen
+			throw new XlsxFastEditorXmlException('Internal error with getCell!', $iex->getCode(), $iex);
+		}
 	}
 
 	/**

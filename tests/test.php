@@ -60,7 +60,7 @@ try {
 	assert($xlsxFastEditor->getRow($sheet1, 1)?->getFirstCell()?->name() === 'A1');
 	assert($xlsxFastEditor->getRow($sheet1, 2)?->number() === 2);
 	assert($xlsxFastEditor->getRow($sheet1, 3)?->getLastCell()?->name() === 'F3');
-	assert($xlsxFastEditor->getRow($sheet1, 4)?->getCell('D4')?->name() === 'D4');
+	assert($xlsxFastEditor->getRow($sheet1, 4)?->getCellOrNull('D4')?->name() === 'D4');
 	assert($xlsxFastEditor->getLastRow($sheet1)?->number() === 4);
 
 	assert(XlsxFastEditor::cellOrderCompare('B3', 'AA23') < 0);

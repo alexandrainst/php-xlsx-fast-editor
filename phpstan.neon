@@ -22,5 +22,10 @@ parameters:
 		strictCalls: true
 		switchConditionsMatchingType: true
 		uselessCast: true
+	exceptions:
+		check:
+			missingCheckedExceptionInThrows: true
+			tooWideThrowType: true
+		implicitThrows: false
 includes:
 	- vendor/phpstan/phpstan-strict-rules/rules.neon

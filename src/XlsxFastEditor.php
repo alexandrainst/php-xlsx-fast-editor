@@ -45,6 +45,9 @@ final class XlsxFastEditor
 	 */
 	private bool $mustClearCalcChain = false;
 
+	/**
+	 * @throws XlsxFastEditorZipException
+	 */
 	public function __construct(string $filename)
 	{
 		$this->zip = new \ZipArchive();
@@ -87,6 +90,7 @@ final class XlsxFastEditor
 	 * Close the underlying document archive.
 	 * Note: changes need to be explicitly saved before (see `XlsxFastEditor::save()`)
 	 * Note: the object should not be used anymore afterwards.
+	 * @throws XlsxFastEditorZipException
 	 */
 	public function close(): void
 	{
@@ -99,6 +103,8 @@ final class XlsxFastEditor
 	/**
 	 * Saves the modified document fragments.
 	 * @param bool $close Automatically close the underlying document archive (see `XlsxFastEditor::close()`)
+	 * @throws XlsxFastEditorZipException
+	 * @throws XlsxFastEditorXmlException
 	 */
 	public function save(bool $close = true): void
 	{
@@ -138,6 +144,8 @@ final class XlsxFastEditor
 	 * returns an XPath instance associated to the DOM at the given XML path.
 	 * The XPath instance is then cached.
 	 * @param string $path The path of the document inside the ZIP document.
+	 * @throws XlsxFastEditorFileFormatException
+	 * @throws XlsxFastEditorXmlException
 	 */
 	private function getXPathFromPath(string $path): \DOMXPath
 	{
@@ -165,6 +173,8 @@ final class XlsxFastEditor
 	/**
 	 * Returns a DOM document of the given XML path.
 	 * @param string $path The path of the document inside the ZIP document.
+	 * @throws XlsxFastEditorFileFormatException
+	 * @throws XlsxFastEditorXmlException
 	 */
 	private function getDomFromPath(string $path): \DOMDocument
 	{
@@ -175,6 +185,8 @@ final class XlsxFastEditor
 	 * Excel can either use a base date from year 1900 (Microsoft Windows) or from year 1904 (old Apple MacOS).
 	 * https://support.microsoft.com/en-us/office/date-systems-in-excel-e7fe7167-48a9-4b96-bb53-5612a800b487
 	 * @phpstan-return 1900|1904
+	 * @throws XlsxFastEditorFileFormatException
+	 * @throws XlsxFastEditorXmlException
 	 */
 	public function getWorkbookDateSystem(): int
 	{
@@ -194,7 +206,9 @@ final class XlsxFastEditor
 	/**
 	 * Convert an internal Excel float representation of a date to a standard `DateTime`.
 	 * @param int $workbookDateSystem {@see XlsxFastEditor::getWorkbookDateSystem()}
+	 * @phpstan-param 1900|1904 $workbookDateSystem
 	 * @internal
+	 * @throws \InvalidArgumentException
 	 */
 	public static function excelDateToDateTime(float $excelDateTime, int $workbookDateSystem = 1900): \DateTimeImmutable
 	{
@@ -234,11 +248,17 @@ final class XlsxFastEditor
 			$iso8601 .= "T{$seconds}S";
 		}
 
-		return $excelBaseDate->add(new \DateInterval($iso8601));
+		try {
+			return $excelBaseDate->add(new \DateInterval($iso8601));
+		} catch (\Exception $ex) {
+			throw new \InvalidArgumentException('Invalid date!', $ex->getCode(), $ex);
+		}
 	}
 
 	/**
 	 * Count the number of worksheets in the workbook.
+	 * @throws XlsxFastEditorFileFormatException
+	 * @throws XlsxFastEditorXmlException
 	 */
 	public function getWorksheetCount(): int
 	{
@@ -251,6 +271,8 @@ final class XlsxFastEditor
 	 * Get a worksheet number (ID) from its name (base 1).
 	 * @param string $sheetName The name of the worksheet to look up.
 	 * @return int The worksheet ID, or -1 if not found.
+	 * @throws XlsxFastEditorFileFormatException
+	 * @throws XlsxFastEditorXmlException
 	 */
 	public function getWorksheetNumber(string $sheetName): int
 	{
@@ -266,6 +288,8 @@ final class XlsxFastEditor
 	 * Get a worksheet name from its number (ID).
 	 * @param int $sheetNumber The number of the worksheet to look up.
 	 * @return string|null The worksheet name, or null if not found.
+	 * @throws XlsxFastEditorFileFormatException
+	 * @throws XlsxFastEditorXmlException
 	 */
 	public function getWorksheetName(int $sheetNumber): ?string
 	{
@@ -282,6 +306,8 @@ final class XlsxFastEditor
 	/**
 	 * Defines the *Full calculation on load* policy for the specified worksheet.
 	 * @param int $sheetNumber Worksheet number (base 1)
+	 * @throws XlsxFastEditorFileFormatException
+	 * @throws XlsxFastEditorXmlException
 	 */
 	public function setFullCalcOnLoad(int $sheetNumber, bool $value): void
 	{
@@ -296,7 +322,11 @@ final class XlsxFastEditor
 			if ($sheetDatas->length > 0) {
 				$sheetData = $sheetDatas[0];
 				if ($sheetData instanceof \DOMElement) {
-					$sheetCalcPr = $dom->createElement('sheetCalcPr');
+					try {
+						$sheetCalcPr = $dom->createElement('sheetCalcPr');
+					} catch (\DOMException $dex) {
+						throw new XlsxFastEditorXmlException("Error creating XML fragment for setFullCalcOnLoad!", $dex->code, $dex);
+					}
 					if ($sheetCalcPr !== false && $sheetData->parentNode !== null) {
 						$sheetData->parentNode->insertBefore($sheetCalcPr, $sheetData->nextSibling);
 					}
@@ -313,13 +343,15 @@ final class XlsxFastEditor
 	 * Get the row of the given number in the given worksheet.
 	 * @param int $sheetNumber Worksheet number (base 1)
 	 * @param int $rowNumber Number (ID) of the row (base 1). Warning: this is not an index (not all rows necessarily exist in a sequence)
-	 * @return XlsxFastEditorRow|null The row of that number in that worksheet if it exists, null otherwise.
 	 * @param int $accessMode To control the behaviour when the cell does not exist:
 	 * set to `XlsxFastEditor::ACCESS_MODE_NULL` to return `null` (default),
 	 * set to `XlsxFastEditor::ACCESS_MODE_EXCEPTION` to raise an `XlsxFastEditorInputException` exception,
 	 * set to `XlsxFastEditor::ACCESS_MODE_AUTOCREATE` to auto-create the cell.
 	 * @return XlsxFastEditorRow|null A row, potentially `null` if the row does not exist and `$accessMode` is set to `XlsxFastEditor::ACCESS_MODE_NULL`
 	 * @phpstan-return ($accessMode is XlsxFastEditor::ACCESS_MODE_NULL ? XlsxFastEditorRow|null : XlsxFastEditorRow)
+	 * @throws XlsxFastEditorFileFormatException
+	 * @throws XlsxFastEditorInputException optionally if the corresponding cell does not exist, depending on choice of `$accessMode`
+	 * @throws XlsxFastEditorXmlException
 	 */
 	public function getRow(int $sheetNumber, int $rowNumber, int $accessMode = XlsxFastEditor::ACCESS_MODE_NULL): ?XlsxFastEditorRow
 	{
@@ -348,7 +380,11 @@ final class XlsxFastEditor
 					if (!($sheetData instanceof \DOMElement)) {
 						throw new XlsxFastEditorXmlException("Error querying XML fragment for worksheet {$sheetNumber}!");
 					}
-					$row = $xpath->document->createElement('row');
+					try {
+						$row = $xpath->document->createElement('row');
+					} catch (\DOMException $dex) {
+						throw new XlsxFastEditorXmlException("Error creating row {$sheetNumber}/{$rowNumber}!", $dex->code, $dex);
+					}
 					if ($row === false) {
 						throw new XlsxFastEditorXmlException("Error creating row {$sheetNumber}/{$rowNumber}!");
 					}
@@ -374,6 +410,8 @@ final class XlsxFastEditor
 	 * Get the first existing row of the worksheet.
 	 * @param int $sheetNumber Worksheet number (base 1)
 	 * @return XlsxFastEditorRow|null The first row of the worksheet if there is any row, null otherwise.
+	 * @throws XlsxFastEditorFileFormatException
+	 * @throws XlsxFastEditorXmlException
 	 */
 	public function getFirstRow(int $sheetNumber): ?XlsxFastEditorRow
 	{
@@ -393,6 +431,8 @@ final class XlsxFastEditor
 	 * Get the last existing row of the worksheet.
 	 * @param int $sheetNumber Worksheet number (base 1)
 	 * @return XlsxFastEditorRow|null The last row of the worksheet if there is any row, null otherwise.
+	 * @throws XlsxFastEditorFileFormatException
+	 * @throws XlsxFastEditorXmlException
 	 */
 	public function getLastRow(int $sheetNumber): ?XlsxFastEditorRow
 	{
@@ -411,6 +451,8 @@ final class XlsxFastEditor
 	/**
 	 * Delete the specified row of the specified worksheet.
 	 * @param int $sheetNumber Worksheet number (base 1)
+	 * @throws XlsxFastEditorFileFormatException
+	 * @throws XlsxFastEditorXmlException
 	 */
 	public function deleteRow(int $sheetNumber, int $rowNumber): bool
 	{
@@ -429,6 +471,8 @@ final class XlsxFastEditor
 	/**
 	 * To iterate over the all the rows of a given worksheet.
 	 * @return \Traversable<XlsxFastEditorRow>
+	 * @throws XlsxFastEditorFileFormatException
+	 * @throws XlsxFastEditorXmlException
 	 */
 	public function rowsIterator(int $sheetNumber): \Traversable
 	{
@@ -449,6 +493,8 @@ final class XlsxFastEditor
 	 * Produce an array from a worksheet, indexed by column name (like `AB`) first, then line (like `12`).
 	 * Only the existing lines and cells are included.
 	 * @return array<string,array<int,null|string>> An array that can be access like `$array['AB'][12]`
+	 * @throws XlsxFastEditorFileFormatException
+	 * @throws XlsxFastEditorXmlException
 	 */
 	public function readArray(int $sheetNumber): array
 	{
@@ -466,6 +512,8 @@ final class XlsxFastEditor
 	 * having the column header defined in the first existing line of the spreadsheet.
 	 * Only the existing lines and cells are included.
 	 * @return array<string,array<int,null|string>> An array that can be access like `$array['columnName'][12]`
+	 * @throws XlsxFastEditorFileFormatException
+	 * @throws XlsxFastEditorXmlException
 	 */
 	public function readArrayWithHeaders(int $sheetNumber): array
 	{
@@ -534,11 +582,16 @@ final class XlsxFastEditor
 	 * set to `XlsxFastEditor::ACCESS_MODE_AUTOCREATE` to auto-create the cell.
 	 * @return XlsxFastEditorCell|null A cell, potentially `null` if the cell does not exist and `$accessMode` is set to `XlsxFastEditor::ACCESS_MODE_NULL`
 	 * @phpstan-return ($accessMode is XlsxFastEditor::ACCESS_MODE_NULL ? XlsxFastEditorCell|null : XlsxFastEditorCell)
+	 * @internal
+	 * @throws XlsxFastEditorFileFormatException
+	 * @throws \InvalidArgumentException if `$cellName` has an invalid format
+	 * @throws XlsxFastEditorInputException optionally if the corresponding cell does not exist, depending on choice of `$accessMode`
+	 * @throws XlsxFastEditorXmlException
 	 */
 	public function getCell(int $sheetNumber, string $cellName, int $accessMode = XlsxFastEditor::ACCESS_MODE_NULL): ?XlsxFastEditorCell
 	{
 		if (!ctype_alnum($cellName)) {
-			throw new XlsxFastEditorInputException("Invalid cell reference {$cellName}!");
+			throw new \InvalidArgumentException("Invalid cell reference {$cellName}!");
 		}
 		$cellName = strtoupper($cellName);
 
@@ -561,7 +614,7 @@ final class XlsxFastEditor
 				case XlsxFastEditor::ACCESS_MODE_AUTOCREATE:
 					$rowNumber = (int)preg_replace('/[^\d]+/', '', $cellName);
 					if ($rowNumber === 0) {
-						throw new XlsxFastEditorInputException("Invalid cell reference {$cellName}!");
+						throw new \InvalidArgumentException("Invalid cell reference {$cellName}!");
 					}
 					$row = $this->getRow($sheetNumber, $rowNumber, $accessMode);
 					return $row->getCell($cellName, $accessMode);
@@ -575,14 +628,56 @@ final class XlsxFastEditor
 	}
 
 	/**
+	 * Access the specified cell in the specified worksheet, or null if if does not exist.
+	 * @param int $sheetNumber Worksheet number (base 1)
+	 * @param $cellName Cell name such as `B4`
+	 * @return XlsxFastEditorCell|null A cell, potentially `null` if the cell does not exist
+	 * @throws \InvalidArgumentException if `$cellName` has an invalid format
+	 * @throws XlsxFastEditorFileFormatException
+	 * @throws XlsxFastEditorXmlException
+	 */
+	public function getCellOrNull(int $sheetNumber, string $cellName): ?XlsxFastEditorCell
+	{
+		try {
+			return $this->getCell($sheetNumber, $cellName, XlsxFastEditor::ACCESS_MODE_NULL);
+		} catch (XlsxFastEditorInputException $iex) {
+			// Will not happen
+			return null;
+		}
+	}
+
+	/**
+	 * Access the specified cell in the specified worksheet, or autocreate it if it does not already exist.
+	 * The corresponding row can also be automatically created if it does not exist already, but the worksheet cannot be automatically created.
+	 * @param int $sheetNumber Worksheet number (base 1)
+	 * @param $cellName Cell name such as `B4`
+	 * @return XlsxFastEditorCell A cell
+	 * @throws \InvalidArgumentException if `$cellName` has an invalid format
+	 * @throws XlsxFastEditorFileFormatException
+	 * @throws XlsxFastEditorXmlException
+	 */
+	public function getCellAutocreate(int $sheetNumber, string $cellName): XlsxFastEditorCell
+	{
+		try {
+			return $this->getCell($sheetNumber, $cellName, XlsxFastEditor::ACCESS_MODE_AUTOCREATE);
+		} catch (XlsxFastEditorInputException $iex) {
+			// Will not happen
+			throw new XlsxFastEditorXmlException('Internal error with getCell!', $iex->getCode(), $iex);
+		}
+	}
+
+	/**
 	 * Read a formula in the given worksheet at the given cell location.
 	 *
 	 * @param int $sheetNumber Worksheet number (base 1)
 	 * @param $cellName Cell name such as `B4`
+	 * @throws \InvalidArgumentException if `$cellName` has an invalid format
+	 * @throws XlsxFastEditorFileFormatException
+	 * @throws XlsxFastEditorXmlException
 	 */
 	public function readFormula(int $sheetNumber, string $cellName): ?string
 	{
-		$cell = $this->getCell($sheetNumber, $cellName, XlsxFastEditor::ACCESS_MODE_NULL);
+		$cell = $this->getCellOrNull($sheetNumber, $cellName);
 		return $cell === null ? null : $cell->readFormula();
 	}
 
@@ -591,10 +686,13 @@ final class XlsxFastEditor
 	 *
 	 * @param int $sheetNumber Worksheet number (base 1)
 	 * @param $cellName Cell name such as `B4`
+	 * @throws \InvalidArgumentException if `$cellName` has an invalid format
+	 * @throws XlsxFastEditorFileFormatException
+	 * @throws XlsxFastEditorXmlException
 	 */
 	public function readFloat(int $sheetNumber, string $cellName): ?float
 	{
-		$cell = $this->getCell($sheetNumber, $cellName, XlsxFastEditor::ACCESS_MODE_NULL);
+		$cell = $this->getCellOrNull($sheetNumber, $cellName);
 		return $cell === null ? null : $cell->readFloat();
 	}
 
@@ -603,10 +701,13 @@ final class XlsxFastEditor
 	 *
 	 * @param int $sheetNumber Worksheet number (base 1)
 	 * @param $cellName Cell name such as `B4`
+	 * @throws \InvalidArgumentException if `$cellName` has an invalid format
+	 * @throws XlsxFastEditorFileFormatException
+	 * @throws XlsxFastEditorXmlException
 	 */
 	public function readDateTime(int $sheetNumber, string $cellName): ?\DateTimeImmutable
 	{
-		$cell = $this->getCell($sheetNumber, $cellName, XlsxFastEditor::ACCESS_MODE_NULL);
+		$cell = $this->getCellOrNull($sheetNumber, $cellName);
 		return $cell === null ? null : $cell->readDateTime();
 	}
 
@@ -615,10 +716,13 @@ final class XlsxFastEditor
 	 *
 	 * @param int $sheetNumber Worksheet number (base 1)
 	 * @param $cellName Cell name such as `B4`
+	 * @throws \InvalidArgumentException if `$cellName` has an invalid format
+	 * @throws XlsxFastEditorFileFormatException
+	 * @throws XlsxFastEditorXmlException
 	 */
 	public function readInt(int $sheetNumber, string $cellName): ?int
 	{
-		$cell = $this->getCell($sheetNumber, $cellName, XlsxFastEditor::ACCESS_MODE_NULL);
+		$cell = $this->getCellOrNull($sheetNumber, $cellName);
 		return $cell === null ? null : $cell->readInt();
 	}
 
@@ -626,6 +730,8 @@ final class XlsxFastEditor
 	 * Access a string stored in the shared strings list.
 	 * @param int $stringNumber String number (ID), base 0.
 	 * @internal
+	 * @throws XlsxFastEditorFileFormatException
+	 * @throws XlsxFastEditorXmlException
 	 */
 	public function _getSharedString(int $stringNumber): ?string
 	{
@@ -649,10 +755,13 @@ final class XlsxFastEditor
 	 *
 	 * @param int $sheetNumber Worksheet number (base 1)
 	 * @param $cellName Cell name such as `B4`
+	 * @throws \InvalidArgumentException if `$cellName` has an invalid format
+	 * @throws XlsxFastEditorFileFormatException
+	 * @throws XlsxFastEditorXmlException
 	 */
 	public function readString(int $sheetNumber, string $cellName): ?string
 	{
-		$cell = $this->getCell($sheetNumber, $cellName, XlsxFastEditor::ACCESS_MODE_NULL);
+		$cell = $this->getCellOrNull($sheetNumber, $cellName);
 		return $cell === null ? null : $cell->readString();
 	}
 
@@ -665,11 +774,14 @@ final class XlsxFastEditor
 	 * Access an hyperlink referenced from a cell of the specified sheet.
 	 * @param string $rId Hyperlink reference.
 	 * @internal
+	 * @throws \InvalidArgumentException if `$rId` has an invalid format
+	 * @throws XlsxFastEditorFileFormatException
+	 * @throws XlsxFastEditorXmlException
 	 */
 	public function _getHyperlink(int $sheetNumber, string $rId): ?string
 	{
 		if (!ctype_alnum($rId)) {
-			throw new XlsxFastEditorInputException("Invalid internal hyperlink reference {$sheetNumber}/{$rId}!");
+			throw new \InvalidArgumentException("Invalid internal hyperlink reference {$sheetNumber}/{$rId}!");
 		}
 		$xpath = $this->getXPathFromPath(self::getWorksheetRelPath($sheetNumber));
 		$xpath->registerNamespace('pr', 'http://schemas.openxmlformats.org/package/2006/relationships');
@@ -685,10 +797,13 @@ final class XlsxFastEditor
 	 *
 	 * @param int $sheetNumber Worksheet number (base 1)
 	 * @param $cellName Cell name such as `B4`
+	 * @throws \InvalidArgumentException if `$cellName` has an invalid format
+	 * @throws XlsxFastEditorFileFormatException
+	 * @throws XlsxFastEditorXmlException
 	 */
 	public function readHyperlink(int $sheetNumber, string $cellName): ?string
 	{
-		$cell = $this->getCell($sheetNumber, $cellName, XlsxFastEditor::ACCESS_MODE_NULL);
+		$cell = $this->getCellOrNull($sheetNumber, $cellName);
 		return $cell === null ? null : $cell->readHyperlink();
 	}
 
@@ -696,11 +811,14 @@ final class XlsxFastEditor
 	 * Change an hyperlink associated to the given cell of the given worksheet.
 	 * @return bool True if any hyperlink was cleared, false otherwise.
 	 * @internal
+	 * @throws \InvalidArgumentException if `$cellName` has an invalid format
+	 * @throws XlsxFastEditorFileFormatException
+	 * @throws XlsxFastEditorXmlException
 	 */
 	public function _setHyperlink(int $sheetNumber, string $rId, string $value): bool
 	{
 		if (!ctype_alnum($rId)) {
-			throw new XlsxFastEditorInputException("Invalid internal hyperlink reference {$sheetNumber}/{$rId}!");
+			throw new \InvalidArgumentException("Invalid internal hyperlink reference {$sheetNumber}/{$rId}!");
 		}
 		$xmlPath = self::getWorksheetRelPath($sheetNumber);
 		$xpath = $this->getXPathFromPath($xmlPath);
@@ -727,10 +845,13 @@ final class XlsxFastEditor
 	 * @param int $sheetNumber Worksheet number (base 1)
 	 * @param $cellName Cell name such as `B4`
 	 * @return bool True if the hyperlink could be replaced, false otherwise.
+	 * @throws \InvalidArgumentException if `$cellName` has an invalid format
+	 * @throws XlsxFastEditorFileFormatException
+	 * @throws XlsxFastEditorXmlException
 	 */
 	public function writeHyperlink(int $sheetNumber, string $cellName, string $value): bool
 	{
-		$cell = $this->getCell($sheetNumber, $cellName, XlsxFastEditor::ACCESS_MODE_NULL);
+		$cell = $this->getCellOrNull($sheetNumber, $cellName);
 		return $cell === null ? false : $cell->writeHyperlink($value);
 	}
 
@@ -741,10 +862,13 @@ final class XlsxFastEditor
 	 *
 	 * @param int $sheetNumber Worksheet number (base 1)
 	 * @param $cellName Cell name such as `B4`
+	 * @throws \InvalidArgumentException if `$cellName` has an invalid format
+	 * @throws XlsxFastEditorFileFormatException
+	 * @throws XlsxFastEditorXmlException
 	 */
 	public function writeFormula(int $sheetNumber, string $cellName, string $value): void
 	{
-		$cell = $this->getCell($sheetNumber, $cellName, XlsxFastEditor::ACCESS_MODE_AUTOCREATE);
+		$cell = $this->getCellAutocreate($sheetNumber, $cellName);
 		$cell->writeFormula($value);
 	}
 
@@ -756,10 +880,13 @@ final class XlsxFastEditor
 	 * @param int $sheetNumber Worksheet number (base 1)
 	 * @param $cellName Cell name such as `B4`
 	 * @param float $value
+	 * @throws \InvalidArgumentException if `$cellName` has an invalid format
+	 * @throws XlsxFastEditorFileFormatException
+	 * @throws XlsxFastEditorXmlException
 	 */
 	public function writeFloat(int $sheetNumber, string $cellName, float $value): void
 	{
-		$cell = $this->getCell($sheetNumber, $cellName, XlsxFastEditor::ACCESS_MODE_AUTOCREATE);
+		$cell = $this->getCellAutocreate($sheetNumber, $cellName);
 		$cell->writeFloat($value);
 	}
 
@@ -771,10 +898,13 @@ final class XlsxFastEditor
 	 * @param int $sheetNumber Worksheet number (base 1)
 	 * @param $cellName Cell name such as `B4`
 	 * @param int $value
+	 * @throws \InvalidArgumentException if `$cellName` has an invalid format
+	 * @throws XlsxFastEditorFileFormatException
+	 * @throws XlsxFastEditorXmlException
 	 */
 	public function writeInt(int $sheetNumber, string $cellName, int $value): void
 	{
-		$cell = $this->getCell($sheetNumber, $cellName, XlsxFastEditor::ACCESS_MODE_AUTOCREATE);
+		$cell = $this->getCellAutocreate($sheetNumber, $cellName);
 		$cell->writeInt($value);
 	}
 
@@ -783,6 +913,8 @@ final class XlsxFastEditor
 	 * @internal
 	 * @param string $value Value of the new shared string.
 	 * @return int the ID of the new shared string.
+	 * @throws XlsxFastEditorFileFormatException
+	 * @throws XlsxFastEditorXmlException
 	 */
 	public function _makeNewSharedString(string $value): int
 	{
@@ -791,11 +923,20 @@ final class XlsxFastEditor
 			throw new XlsxFastEditorXmlException('Invalid shared strings!');
 		}
 
-		$si = $dom->createElement('si');
+		try {
+			$si = $dom->createElement('si');
+		} catch (\DOMException $dex) {
+			throw new XlsxFastEditorXmlException('Error creating <si> in shared strings!', $dex->code, $dex);
+		}
 		if ($si === false) {
 			throw new XlsxFastEditorXmlException('Error creating <si> in shared strings!');
 		}
-		$t = $dom->createElement('t', $value);
+
+		try {
+			$t = $dom->createElement('t', $value);
+		} catch (\DOMException $dex) {
+			throw new XlsxFastEditorXmlException('Error creating <t> in shared strings!', $dex->code, $dex);
+		}
 		if ($t === false) {
 			throw new XlsxFastEditorXmlException('Error creating <t> in shared strings!');
 		}
@@ -819,10 +960,13 @@ final class XlsxFastEditor
 	 *
 	 * @param int $sheetNumber Worksheet number (base 1)
 	 * @param $cellName Cell name such as `B4`
+	 * @throws \InvalidArgumentException if `$cellName` has an invalid format
+	 * @throws XlsxFastEditorFileFormatException
+	 * @throws XlsxFastEditorXmlException
 	 */
 	public function writeString(int $sheetNumber, string $cellName, string $value): void
 	{
-		$cell = $this->getCell($sheetNumber, $cellName, XlsxFastEditor::ACCESS_MODE_AUTOCREATE);
+		$cell = $this->getCellAutocreate($sheetNumber, $cellName);
 		$cell->writeString($value);
 	}
 
@@ -832,6 +976,8 @@ final class XlsxFastEditor
 	 * @param string|array<string> $pattern The pattern to search for.
 	 * @param string|array<string> $replacement The string or an array with strings to replace.
 	 * @return int The number of replacements done.
+	 * @throws XlsxFastEditorFileFormatException
+	 * @throws XlsxFastEditorXmlException
 	 */
 	public function textReplace($pattern, $replacement): int
 	{

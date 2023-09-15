@@ -89,7 +89,7 @@ try {
 
 	// Navigation methods for existing cells
 	$cell = $row->getFirstCell();
-	$cell = $row->getCell('D4');
+	$cell = $row->getCellOrNull('D4');
 	$cell = $cell->getPreviousCell();
 	$cell = $cell->getNextCell();
 	$cell = $row->getLastCell();
