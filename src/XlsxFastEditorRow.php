@@ -49,7 +49,7 @@ final class XlsxFastEditorRow
 	}
 
 	/**
-	 * Access the previous existing row, if any, null otherwise.
+	 * Access the previous existing row, if any, `null` otherwise.
 	 */
 	public function getPreviousRow(): ?XlsxFastEditorRow
 	{
@@ -64,7 +64,7 @@ final class XlsxFastEditorRow
 	}
 
 	/**
-	 * Access the next existing row, if any, null otherwise.
+	 * Access the next existing row, if any, `null` otherwise.
 	 */
 	public function getNextRow(): ?XlsxFastEditorRow
 	{
@@ -95,7 +95,7 @@ final class XlsxFastEditorRow
 
 	/**
 	 * Get the first existing cell for a given line.
-	 * @return XlsxFastEditorCell|null The first cell of the given line if it exists, null otherwise.
+	 * @return XlsxFastEditorCell|null The first cell of the given line if it exists, `null` otherwise.
 	 */
 	public function getFirstCell(): ?XlsxFastEditorCell
 	{
@@ -214,7 +214,7 @@ final class XlsxFastEditorRow
 
 	/**
 	 * Get the last existing cell for a given line.
-	 * @return XlsxFastEditorCell|null The last cell of the given line if it exists, null otherwise.
+	 * @return XlsxFastEditorCell|null The last cell of the given line if it exists, `null` otherwise.
 	 */
 	public function getLastCell(): ?XlsxFastEditorCell
 	{

@@ -185,6 +185,7 @@ final class XlsxFastEditor
 	 * Excel can either use a base date from year 1900 (Microsoft Windows) or from year 1904 (old Apple MacOS).
 	 * https://support.microsoft.com/en-us/office/date-systems-in-excel-e7fe7167-48a9-4b96-bb53-5612a800b487
 	 * @phpstan-return 1900|1904
+	 * @return int 1900 or 1904
 	 * @throws XlsxFastEditorFileFormatException
 	 * @throws XlsxFastEditorXmlException
 	 */
@@ -409,7 +410,7 @@ final class XlsxFastEditor
 	/**
 	 * Get the first existing row of the worksheet.
 	 * @param int $sheetNumber Worksheet number (base 1)
-	 * @return XlsxFastEditorRow|null The first row of the worksheet if there is any row, null otherwise.
+	 * @return XlsxFastEditorRow|null The first row of the worksheet if there is any row, `null` otherwise.
 	 * @throws XlsxFastEditorFileFormatException
 	 * @throws XlsxFastEditorXmlException
 	 */
@@ -430,7 +431,7 @@ final class XlsxFastEditor
 	/**
 	 * Get the last existing row of the worksheet.
 	 * @param int $sheetNumber Worksheet number (base 1)
-	 * @return XlsxFastEditorRow|null The last row of the worksheet if there is any row, null otherwise.
+	 * @return XlsxFastEditorRow|null The last row of the worksheet if there is any row, `null` otherwise.
 	 * @throws XlsxFastEditorFileFormatException
 	 * @throws XlsxFastEditorXmlException
 	 */
@@ -451,6 +452,7 @@ final class XlsxFastEditor
 	/**
 	 * Delete the specified row of the specified worksheet.
 	 * @param int $sheetNumber Worksheet number (base 1)
+	 * @return bool True if the deletion succeeds, false otherwise.
 	 * @throws XlsxFastEditorFileFormatException
 	 * @throws XlsxFastEditorXmlException
 	 */
@@ -671,6 +673,7 @@ final class XlsxFastEditor
 	 *
 	 * @param int $sheetNumber Worksheet number (base 1)
 	 * @param string $cellName Cell name such as `B4`
+	 * @return string|null an integer if the cell exists and contains a formula, `null` otherwise.
 	 * @throws \InvalidArgumentException if `$cellName` has an invalid format
 	 * @throws XlsxFastEditorFileFormatException
 	 * @throws XlsxFastEditorXmlException
@@ -686,6 +689,7 @@ final class XlsxFastEditor
 	 *
 	 * @param int $sheetNumber Worksheet number (base 1)
 	 * @param string $cellName Cell name such as `B4`
+	 * @return float|null a float if the cell exists and contains a number, `null` otherwise.
 	 * @throws \InvalidArgumentException if `$cellName` has an invalid format
 	 * @throws XlsxFastEditorFileFormatException
 	 * @throws XlsxFastEditorXmlException
@@ -701,6 +705,7 @@ final class XlsxFastEditor
 	 *
 	 * @param int $sheetNumber Worksheet number (base 1)
 	 * @param string $cellName Cell name such as `B4`
+	 * @return \DateTimeImmutable|null a date if the cell exists and contains a number, `null` otherwise.
 	 * @throws \InvalidArgumentException if `$cellName` has an invalid format
 	 * @throws XlsxFastEditorFileFormatException
 	 * @throws XlsxFastEditorXmlException
@@ -716,6 +721,7 @@ final class XlsxFastEditor
 	 *
 	 * @param int $sheetNumber Worksheet number (base 1)
 	 * @param string $cellName Cell name such as `B4`
+	 * @return int|null an integer if the cell exists and contains a number, `null` otherwise.
 	 * @throws \InvalidArgumentException if `$cellName` has an invalid format
 	 * @throws XlsxFastEditorFileFormatException
 	 * @throws XlsxFastEditorXmlException
@@ -755,6 +761,7 @@ final class XlsxFastEditor
 	 *
 	 * @param int $sheetNumber Worksheet number (base 1)
 	 * @param string $cellName Cell name such as `B4`
+	 * @return string|null a string if the cell exists and contains a value, `null` otherwise.
 	 * @throws \InvalidArgumentException if `$cellName` has an invalid format
 	 * @throws XlsxFastEditorFileFormatException
 	 * @throws XlsxFastEditorXmlException
@@ -797,6 +804,7 @@ final class XlsxFastEditor
 	 *
 	 * @param int $sheetNumber Worksheet number (base 1)
 	 * @param string $cellName Cell name such as `B4`
+	 * @return string|null a string if the cell exists and contains a hyperlink, `null` otherwise.
 	 * @throws \InvalidArgumentException if `$cellName` has an invalid format
 	 * @throws XlsxFastEditorFileFormatException
 	 * @throws XlsxFastEditorXmlException

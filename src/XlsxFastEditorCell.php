@@ -61,7 +61,7 @@ final class XlsxFastEditorCell
 	}
 
 	/**
-	 * Access the previous existing cell, if any, null otherwise.
+	 * Access the previous existing cell, if any, `null` otherwise.
 	 */
 	public function getPreviousCell(): ?XlsxFastEditorCell
 	{
@@ -76,7 +76,7 @@ final class XlsxFastEditorCell
 	}
 
 	/**
-	 * Access the next existing cell, if any, null otherwise.
+	 * Access the next existing cell, if any, `null` otherwise.
 	 */
 	public function getNextCell(): ?XlsxFastEditorCell
 	{
@@ -105,6 +105,7 @@ final class XlsxFastEditorCell
 
 	/**
 	 * Read a formula in the given worksheet at the given cell location.
+	 * @return string|null an integer if the cell exists and contains a formula, `null` otherwise.
 	 * @throws XlsxFastEditorXmlException
 	 */
 	public function readFormula(): ?string
@@ -134,6 +135,7 @@ final class XlsxFastEditorCell
 
 	/**
 	 * Read the float value of the cell.
+	 * @return float|null a float if the cell exists and contains a number, `null` otherwise.
 	 */
 	public function readFloat(): ?float
 	{
@@ -146,6 +148,7 @@ final class XlsxFastEditorCell
 
 	/**
 	 * Read the date/time value of the cell, if any.
+	 * @return \DateTimeImmutable|null a date if the cell exists and contains a number, `null` otherwise.
 	 * @throws XlsxFastEditorFileFormatException
 	 * @throws XlsxFastEditorXmlException
 	 */
@@ -165,6 +168,7 @@ final class XlsxFastEditorCell
 
 	/**
 	 * Read the integer value of the cell.
+	 * @return int|null an integer if the cell exists and contains a number, `null` otherwise.
 	 */
 	public function readInt(): ?int
 	{
@@ -176,8 +180,8 @@ final class XlsxFastEditorCell
 	}
 
 	/**
-	 * Read the string value of the cell,
-	 * compatible with the shared string approach.
+	 * Read the string value of the cell, compatible with the shared string approach.
+	 * @return string|null a string if the cell exists and contains a value, `null` otherwise.
 	 * @throws XlsxFastEditorFileFormatException
 	 * @throws XlsxFastEditorXmlException
 	 */
@@ -202,6 +206,7 @@ final class XlsxFastEditorCell
 
 	/**
 	 * Read the hyperlink value of the cell, if any.
+	 * @return string|null a string if the cell exists and contains a hyperlink, `null` otherwise.
 	 * @throws XlsxFastEditorFileFormatException
 	 * @throws XlsxFastEditorXmlException
 	 */
