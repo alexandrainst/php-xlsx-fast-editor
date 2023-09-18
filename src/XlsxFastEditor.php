@@ -576,6 +576,10 @@ final class XlsxFastEditor
 	 * Access the specified cell in the specified worksheet. Can create it automatically if asked to.
 	 * The corresponding row can also be automatically created if it does not exist already, but the worksheet cannot be automatically created.
 	 *
+	 * ℹ️ Instead of calling multiple times this function, consider the faster navigation methods
+	 * `XlsxFastEditor::rowsIterator()`, `XlsxFastEditor::getFirstRow()`, `XlsxFastEditorRow::cellsIterator()`,
+	 * `XlsxFastEditorRow::getNextRow()`, `XlsxFastEditorRow::getFirstCell()`, `XlsxFastEditorCell::getNextCell()`, etc.
+	 *
 	 * @param int $sheetNumber Worksheet number (base 1)
 	 * @param string $cellName Cell name such as `B4`
 	 * @param int $accessMode To control the behaviour when the cell does not exist:
@@ -631,6 +635,11 @@ final class XlsxFastEditor
 
 	/**
 	 * Access the specified cell in the specified worksheet, or null if if does not exist.
+	 *
+	 * ℹ️ Instead of calling multiple times this function, consider the faster navigation methods
+	 * `XlsxFastEditor::rowsIterator()`, `XlsxFastEditor::getFirstRow()`, `XlsxFastEditorRow::cellsIterator()`,
+	 * `XlsxFastEditorRow::getNextRow()`, `XlsxFastEditorRow::getFirstCell()`, `XlsxFastEditorCell::getNextCell()`, etc.
+	 *
 	 * @param int $sheetNumber Worksheet number (base 1)
 	 * @param string $cellName Cell name such as `B4`
 	 * @return XlsxFastEditorCell|null A cell, potentially `null` if the cell does not exist

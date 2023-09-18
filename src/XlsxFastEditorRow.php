@@ -50,6 +50,7 @@ final class XlsxFastEditorRow
 
 	/**
 	 * Access the previous existing row, if any, `null` otherwise.
+	 * ℹ️ This is a faster method than `XlsxFastEditor::getRow()`
 	 */
 	public function getPreviousRow(): ?XlsxFastEditorRow
 	{
@@ -65,6 +66,7 @@ final class XlsxFastEditorRow
 
 	/**
 	 * Access the next existing row, if any, `null` otherwise.
+	 * ℹ️ This is a faster method than `XlsxFastEditor::getRow()`
 	 */
 	public function getNextRow(): ?XlsxFastEditorRow
 	{
@@ -80,6 +82,7 @@ final class XlsxFastEditorRow
 
 	/**
 	 * To iterate over all the existing cells of the row.
+	 * ℹ️ This is a faster method than `XlsxFastEditorRow::getCellOrNull()`
 	 * @return \Traversable<XlsxFastEditorCell>
 	 */
 	public function cellsIterator(): \Traversable
@@ -95,6 +98,7 @@ final class XlsxFastEditorRow
 
 	/**
 	 * Get the first existing cell for a given line.
+	 * ℹ️ This is a faster method than `XlsxFastEditorRow::getCellOrNull()`
 	 * @return XlsxFastEditorCell|null The first cell of the given line if it exists, `null` otherwise.
 	 */
 	public function getFirstCell(): ?XlsxFastEditorCell
@@ -111,6 +115,10 @@ final class XlsxFastEditorRow
 
 	/**
 	 * Get the cell of the given name if it exists.
+	 *
+	 * ℹ️ Instead of calling multiple times this function, consider the faster navigation methods
+	 * `XlsxFastEditorRow::cellsIterator()`, `XlsxFastEditorRow::getFirstCell()`, `XlsxFastEditorCell::getNextCell()`, etc.
+	 *
 	 * @param string $cellName Column name such as `'B'` or full cell name such as `'B4'`
 	 * @param int $accessMode To control the behaviour when the cell does not exist:
 	 * set to `XlsxFastEditor::ACCESS_MODE_NULL` to return `null` (default),
@@ -180,6 +188,10 @@ final class XlsxFastEditorRow
 
 	/**
 	 * Get the cell of the given name, or null if if does not exist.
+	 *
+	 * ℹ️ Instead of calling multiple times this function, consider the faster navigation methods
+	 * `XlsxFastEditorRow::cellsIterator()`, `XlsxFastEditorRow::getFirstCell()`, `XlsxFastEditorCell::getNextCell()`, etc.
+	 *
 	 * @param string $cellName Column name such as `'B'` or full cell name such as `'B4'`
 	 * @return XlsxFastEditorCell|null A cell, potentially `null` if the cell does not exist
 	 * @throws \InvalidArgumentException if `$cellName` has an invalid format

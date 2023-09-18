@@ -40,7 +40,7 @@
 		"php-lint": "find . -type d -name 'vendor' -prune -o -name '*.php' -print0 | xargs -0 -n1 -P4 php -l 1>/dev/null",
 		"phpcs": "phpcs . -s",
 		"phpcbf": "phpcbf . -p -s",
-		"phpstan": "phpstan analyse --memory-limit 512M .",
+		"phpstan": "phpstan analyse .",
 		"asserts": "php -d zend.assertions tests/test.php",
 		"test": [
 			"@php-lint",

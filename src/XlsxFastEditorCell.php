@@ -62,6 +62,7 @@ final class XlsxFastEditorCell
 
 	/**
 	 * Access the previous existing cell, if any, `null` otherwise.
+	 * ℹ️ This is a faster method than `XlsxFastEditorRow::getCellOrNull()`
 	 */
 	public function getPreviousCell(): ?XlsxFastEditorCell
 	{
@@ -77,6 +78,7 @@ final class XlsxFastEditorCell
 
 	/**
 	 * Access the next existing cell, if any, `null` otherwise.
+	 * ℹ️ This is a faster method than `XlsxFastEditorRow::getCellOrNull()`
 	 */
 	public function getNextCell(): ?XlsxFastEditorCell
 	{

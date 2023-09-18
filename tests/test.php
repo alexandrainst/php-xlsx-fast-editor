@@ -157,7 +157,7 @@ try {
 
 	// Verify by hand that the resulting file opens without warning in Microsoft Excel.
 	// Verify by hand that the cell Sheet1!E4 has its formula recalculated (to -999) when opening in Excel.
-	// unlink(__DIR__ . '/copy.xlsx');
+	// unlink(__DIR__ . '/_copy.xlsx');
 } catch (XlsxFastEditorException $xlsxe) {
 	die($xlsxe);
 }

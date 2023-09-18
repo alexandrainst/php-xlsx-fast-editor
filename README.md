@@ -86,11 +86,11 @@ try {
 
 	// Methods for rows
 	$rowNumber = $row->number();
+	$cell = $row->getCellOrNull('D2');
+	$cell = $row->getCellOrNull('D');
 
 	// Navigation methods for existing cells
 	$cell = $row->getFirstCell();
-	$cell = $row->getCellOrNull('D2');
-	$cell = $row->getCellOrNull('D');
 	$cell = $cell->getPreviousCell();
 	$cell = $cell->getNextCell();
 	$cell = $row->getLastCell();
@@ -124,6 +124,10 @@ try {
 	die($xlsxe->getMessage());
 }
 ```
+
+## Tips
+
+* ℹ️ Iterators (`rowsIterator()`, `cellsIterator()`) and navigation methods (`getNextCell()`, etc.) are faster than accessing a cell by name (`getCellOrNull()`) or a row by number (`getRow()`).
 
 ## Requirements
 
