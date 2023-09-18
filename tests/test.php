@@ -60,8 +60,20 @@ try {
 	assert($xlsxFastEditor->getRow($sheet1, 1)?->getFirstCell()?->name() === 'A1');
 	assert($xlsxFastEditor->getRow($sheet1, 2)?->number() === 2);
 	assert($xlsxFastEditor->getRow($sheet1, 3)?->getLastCell()?->name() === 'F3');
-	assert($xlsxFastEditor->getRow($sheet1, 4)?->getCellOrNull('D4')?->name() === 'D4');
 	assert($xlsxFastEditor->getLastRow($sheet1)?->number() === 4);
+
+	$row4 = $xlsxFastEditor->getRow($sheet1, 4);
+	assert($row4 !== null);
+	assert($row4->getCellOrNull('D4')?->name() === 'D4');
+	assert($row4->getCellOrNull('d4')?->name() === 'D4');
+	assert($row4->getCellOrNull('D')?->name() === 'D4');
+	$ex = null;
+	try {
+		assert($row4->getCellAutocreate('D5')->name() === 'D5');
+	} catch (\InvalidArgumentException $aex) {
+		$ex = $aex;
+	}
+	assert($ex instanceof \InvalidArgumentException);
 
 	assert(XlsxFastEditor::cellOrderCompare('B3', 'AA23') < 0);
 	assert(XlsxFastEditor::cellOrderCompare('AA23', 'AB23') < 0);

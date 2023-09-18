@@ -111,7 +111,7 @@ final class XlsxFastEditorRow
 
 	/**
 	 * Get the cell of the given name if it exists.
-	 * @param $cellName Cell name such as `B4`
+	 * @param string $cellName Column name such as `'B'` or full cell name such as `'B4'`
 	 * @param int $accessMode To control the behaviour when the cell does not exist:
 	 * set to `XlsxFastEditor::ACCESS_MODE_NULL` to return `null` (default),
 	 * set to `XlsxFastEditor::ACCESS_MODE_EXCEPTION` to raise an `XlsxFastEditorInputException` exception,
@@ -125,9 +125,13 @@ final class XlsxFastEditorRow
 	 */
 	public function getCell(string $cellName, int $accessMode = XlsxFastEditor::ACCESS_MODE_NULL): ?XlsxFastEditorCell
 	{
-		if (!ctype_alnum($cellName)) {
+		if (ctype_alpha($cellName)) {
+			$cellName .= $this->number();
+		} elseif (!ctype_alnum($cellName)) {
 			throw new \InvalidArgumentException("Invalid cell reference {$cellName}!");
 		}
+		$cellName = strtoupper($cellName);
+
 		$xpath = $this->getXPath();
 		$cs = $xpath->query("./o:c[@r='$cellName'][1]", $this->r);
 		$c = null;
@@ -140,6 +144,11 @@ final class XlsxFastEditorRow
 
 		if ($c === null && $accessMode === XlsxFastEditor::ACCESS_MODE_AUTOCREATE) {
 			// The cell <c> was not found
+			$rowNumber = (int)preg_replace('/[^\d]+/', '', $cellName);
+			if ($rowNumber !== $this->number()) {
+				throw new \InvalidArgumentException("Invalid line in cell reference {$cellName} for line {$this->number()}!");
+			}
+
 			$dom = $xpath->document;
 			try {
 				$c = $dom->createElement('c');
@@ -171,7 +180,7 @@ final class XlsxFastEditorRow
 
 	/**
 	 * Get the cell of the given name, or null if if does not exist.
-	 * @param $cellName Cell name such as `B4`
+	 * @param string $cellName Column name such as `'B'` or full cell name such as `'B4'`
 	 * @return XlsxFastEditorCell|null A cell, potentially `null` if the cell does not exist
 	 * @throws \InvalidArgumentException if `$cellName` has an invalid format
 	 * @throws XlsxFastEditorXmlException
@@ -188,7 +197,7 @@ final class XlsxFastEditorRow
 
 	/**
 	 * Get the cell of the given name, or autocreate it if it does not already exist.
-	 * @param $cellName Cell name such as `B4`
+	 * @param string $cellName Column name such as `'B'` or full cell name such as `'B4'`
 	 * @return XlsxFastEditorCell A cell
 	 * @throws \InvalidArgumentException if `$cellName` has an invalid format
 	 * @throws XlsxFastEditorXmlException
