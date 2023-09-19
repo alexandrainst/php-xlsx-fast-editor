@@ -71,7 +71,7 @@ final class XlsxFastEditorCell
 			if ($c->localName === 'c') {
 				return new XlsxFastEditorCell($this->editor, $this->sheetNumber, $c);
 			}
-			$c = $this->c->previousElementSibling;
+			$c = $c->previousElementSibling;
 		}
 		return null;
 	}
@@ -84,10 +84,10 @@ final class XlsxFastEditorCell
 	{
 		$c = $this->c->nextElementSibling;
 		while ($c !== null) {
-			if ($c->localName === 'r') {
+			if ($c->localName === 'c') {
 				return new XlsxFastEditorCell($this->editor, $this->sheetNumber, $c);
 			}
-			$c = $this->c->nextElementSibling;
+			$c = $c->nextElementSibling;
 		}
 		return null;
 	}

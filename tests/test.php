@@ -64,6 +64,7 @@ try {
 
 	$row4 = $xlsxFastEditor->getRow($sheet1, 4);
 	assert($row4 !== null);
+	assert($row4->getPreviousRow()?->getNextRow()?->number() === 4);
 	assert($row4->getCellOrNull('D4')?->name() === 'D4');
 	assert($row4->getCellOrNull('d4')?->name() === 'D4');
 	assert($row4->getCellOrNull('D')?->name() === 'D4');
@@ -74,6 +75,10 @@ try {
 		$ex = $aex;
 	}
 	assert($ex instanceof \InvalidArgumentException);
+
+	$cellD4 = $row4->getCell('D4');
+	assert($cellD4 !== null);
+	assert($cellD4->getPreviousCell()?->getNextCell()?->name() === 'D4');
 
 	assert(XlsxFastEditor::cellOrderCompare('B3', 'AA23') < 0);
 	assert(XlsxFastEditor::cellOrderCompare('AA23', 'AB23') < 0);

@@ -56,10 +56,10 @@ final class XlsxFastEditorRow
 	{
 		$r = $this->r->previousElementSibling;
 		while ($r !== null) {
-			if ($r->localName === 'r') {
+			if ($r->localName === 'row') {
 				return new XlsxFastEditorRow($this->editor, $this->sheetNumber, $r);
 			}
-			$r = $this->r->previousElementSibling;
+			$r = $r->previousElementSibling;
 		}
 		return null;
 	}
@@ -72,10 +72,10 @@ final class XlsxFastEditorRow
 	{
 		$r = $this->r->nextElementSibling;
 		while ($r !== null) {
-			if ($r->localName === 'r') {
+			if ($r->localName === 'row') {
 				return new XlsxFastEditorRow($this->editor, $this->sheetNumber, $r);
 			}
-			$r = $this->r->nextElementSibling;
+			$r = $r->nextElementSibling;
 		}
 		return null;
 	}
