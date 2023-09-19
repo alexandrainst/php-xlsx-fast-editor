@@ -236,7 +236,7 @@ final class XlsxFastEditorCell
 		$v = null;
 		$this->c->removeAttribute('t');	// Remove type, if it exists
 		for ($i = $this->c->childNodes->length - 1; $i >= 0; $i--) {
-			// Remove all childs except <v>
+			// Remove all children except <v>
 			$child = $this->c->childNodes[$i];
 			if ($child instanceof \DOMElement) {
 				if ($child->localName === 'v') {

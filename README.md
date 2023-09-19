@@ -65,13 +65,13 @@ try {
 	$xlsxFastEditor->writeFloat($worksheetId1, 'B2', 3.14);
 	$xlsxFastEditor->writeInt($worksheetId1, 'C3', 13);
 	$xlsxFastEditor->writeString($worksheetId1, 'D4', 'Hello');
-	$xlsxFastEditor->writeHyperlink($sheet1, 'B4', 'https://example.net/');	// Only for cells with an existing hyperlink
+	$xlsxFastEditor->writeHyperlink($worksheetId1, 'B4', 'https://example.net/');	// Only for cells with an existing hyperlink
 
 	// Read as array
-	$table = $xlsxFastEditor->readArray($sheet1);
+	$table = $xlsxFastEditor->readArray($worksheetId1);
 	$s = $table['B'][2];
 
-	$table = $xlsxFastEditor->readArrayWithHeaders($sheet1);
+	$table = $xlsxFastEditor->readArrayWithHeaders($worksheetId1);
 	$s = $table['columnName'][2];
 
 	// Regex search & replace operating globally on all the worksheets:

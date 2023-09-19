@@ -494,7 +494,7 @@ final class XlsxFastEditor
 	/**
 	 * Produce an array from a worksheet, indexed by column name (like `AB`) first, then line (like `12`).
 	 * Only the existing lines and cells are included.
-	 * @return array<string,array<int,null|string>> An array that can be access like `$array['AB'][12]`
+	 * @return array<string,array<int,null|string>> An array that can be accessed like `$array['AB'][12]`
 	 * @throws XlsxFastEditorFileFormatException
 	 * @throws XlsxFastEditorXmlException
 	 */
@@ -513,7 +513,7 @@ final class XlsxFastEditor
 	 * Produce an array from a worksheet, indexed by column header (like `columnName`) first, then line (like `12`),
 	 * having the column header defined in the first existing line of the spreadsheet.
 	 * Only the existing lines and cells are included.
-	 * @return array<string,array<int,null|string>> An array that can be access like `$array['columnName'][12]`
+	 * @return array<string,array<int,null|string>> An array that can be accessed like `$array['columnName'][12]`
 	 * @throws XlsxFastEditorFileFormatException
 	 * @throws XlsxFastEditorXmlException
 	 */
