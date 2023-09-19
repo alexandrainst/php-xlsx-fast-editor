@@ -187,7 +187,7 @@ final class XlsxFastEditorRow
 	}
 
 	/**
-	 * Get the cell of the given name, or null if if does not exist.
+	 * Get the cell of the given name, or `null` if if does not exist.
 	 *
 	 * ℹ️ Instead of calling multiple times this function, consider the faster navigation methods
 	 * `XlsxFastEditorRow::cellsIterator()`, `XlsxFastEditorRow::getFirstCell()`, `XlsxFastEditorCell::getNextCell()`, etc.

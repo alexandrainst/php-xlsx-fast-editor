@@ -185,7 +185,7 @@ final class XlsxFastEditor
 	 * Excel can either use a base date from year 1900 (Microsoft Windows) or from year 1904 (old Apple MacOS).
 	 * https://support.microsoft.com/en-us/office/date-systems-in-excel-e7fe7167-48a9-4b96-bb53-5612a800b487
 	 * @phpstan-return 1900|1904
-	 * @return int 1900 or 1904
+	 * @return int `1900` or `1904`
 	 * @throws XlsxFastEditorFileFormatException
 	 * @throws XlsxFastEditorXmlException
 	 */
@@ -271,7 +271,7 @@ final class XlsxFastEditor
 	/**
 	 * Get a worksheet number (ID) from its name (base 1).
 	 * @param string $sheetName The name of the worksheet to look up.
-	 * @return int The worksheet ID, or -1 if not found.
+	 * @return int The worksheet ID, or `-1` if not found.
 	 * @throws XlsxFastEditorFileFormatException
 	 * @throws XlsxFastEditorXmlException
 	 */
@@ -288,7 +288,7 @@ final class XlsxFastEditor
 	/**
 	 * Get a worksheet name from its number (ID).
 	 * @param int $sheetNumber The number of the worksheet to look up.
-	 * @return string|null The worksheet name, or null if not found.
+	 * @return string|null The worksheet name, or `null` if not found.
 	 * @throws XlsxFastEditorFileFormatException
 	 * @throws XlsxFastEditorXmlException
 	 */
@@ -452,7 +452,7 @@ final class XlsxFastEditor
 	/**
 	 * Delete the specified row of the specified worksheet.
 	 * @param int $sheetNumber Worksheet number (base 1)
-	 * @return bool True if the deletion succeeds, false otherwise.
+	 * @return bool `true` if the deletion succeeds, `false` otherwise.
 	 * @throws XlsxFastEditorFileFormatException
 	 * @throws XlsxFastEditorXmlException
 	 */
@@ -492,7 +492,7 @@ final class XlsxFastEditor
 	}
 
 	/**
-	 * Produce an array from a worksheet, indexed by column name (like `AB`) first, then line (like `12`).
+	 * Produce an array from a worksheet, indexed by column name (like `'AB'`) first, then line (like `12`).
 	 * Only the existing lines and cells are included.
 	 * @return array<string,array<int,null|string>> An array that can be accessed like `$array['AB'][12]`
 	 * @throws XlsxFastEditorFileFormatException
@@ -510,7 +510,7 @@ final class XlsxFastEditor
 	}
 
 	/**
-	 * Produce an array from a worksheet, indexed by column header (like `columnName`) first, then line (like `12`),
+	 * Produce an array from a worksheet, indexed by column header (like `'columnName'`) first, then line (like `12`),
 	 * having the column header defined in the first existing line of the spreadsheet.
 	 * Only the existing lines and cells are included.
 	 * @return array<string,array<int,null|string>> An array that can be accessed like `$array['columnName'][12]`
@@ -539,10 +539,10 @@ final class XlsxFastEditor
 	}
 
 	/**
-	 * Sort cells (such as `B3`, `AA23`) on column first (such as `B`, `AA`) and then line (such as `3`, `23`).
-	 * @param $ref1 A cell reference such as `B3`
-	 * @param $ref1 A cell reference such as `AA23`
-	 * @return int -1 if $ref1 is before $ref2; 1 if $ref1 is greater than $ref2, and 0 if they are equal.
+	 * Sort cells (such as `'B3'`, `'AA23'`) on column first (such as `'B'`, `'AA'`) and then line (such as `3`, `23`).
+	 * @param $ref1 A cell reference such as `'B3'`
+	 * @param $ref1 A cell reference such as `'AA23'`
+	 * @return int `<0` if $ref1 is before $ref2; `>0` if $ref1 is greater than $ref2, and `0` if they are equal.
 	 */
 	public static function cellOrderCompare(string $ref1, string $ref2): int
 	{
@@ -581,7 +581,7 @@ final class XlsxFastEditor
 	 * `XlsxFastEditorRow::getNextRow()`, `XlsxFastEditorRow::getFirstCell()`, `XlsxFastEditorCell::getNextCell()`, etc.
 	 *
 	 * @param int $sheetNumber Worksheet number (base 1)
-	 * @param string $cellName Cell name such as `B4`
+	 * @param string $cellName Cell name such as `'B4'`
 	 * @param int $accessMode To control the behaviour when the cell does not exist:
 	 * set to `XlsxFastEditor::ACCESS_MODE_NULL` to return `null` (default),
 	 * set to `XlsxFastEditor::ACCESS_MODE_EXCEPTION` to raise an `XlsxFastEditorInputException` exception,
@@ -634,14 +634,14 @@ final class XlsxFastEditor
 	}
 
 	/**
-	 * Access the specified cell in the specified worksheet, or null if if does not exist.
+	 * Access the specified cell in the specified worksheet, or `null` if if does not exist.
 	 *
 	 * ℹ️ Instead of calling multiple times this function, consider the faster navigation methods
 	 * `XlsxFastEditor::rowsIterator()`, `XlsxFastEditor::getFirstRow()`, `XlsxFastEditorRow::cellsIterator()`,
 	 * `XlsxFastEditorRow::getNextRow()`, `XlsxFastEditorRow::getFirstCell()`, `XlsxFastEditorCell::getNextCell()`, etc.
 	 *
 	 * @param int $sheetNumber Worksheet number (base 1)
-	 * @param string $cellName Cell name such as `B4`
+	 * @param string $cellName Cell name such as `'B4'`
 	 * @return XlsxFastEditorCell|null A cell, potentially `null` if the cell does not exist
 	 * @throws \InvalidArgumentException if `$cellName` has an invalid format
 	 * @throws XlsxFastEditorFileFormatException
@@ -661,7 +661,7 @@ final class XlsxFastEditor
 	 * Access the specified cell in the specified worksheet, or autocreate it if it does not already exist.
 	 * The corresponding row can also be automatically created if it does not exist already, but the worksheet cannot be automatically created.
 	 * @param int $sheetNumber Worksheet number (base 1)
-	 * @param string $cellName Cell name such as `B4`
+	 * @param string $cellName Cell name such as `'B4'`
 	 * @return XlsxFastEditorCell A cell
 	 * @throws \InvalidArgumentException if `$cellName` has an invalid format
 	 * @throws XlsxFastEditorFileFormatException
@@ -681,7 +681,7 @@ final class XlsxFastEditor
 	 * Read a formula in the given worksheet at the given cell location.
 	 *
 	 * @param int $sheetNumber Worksheet number (base 1)
-	 * @param string $cellName Cell name such as `B4`
+	 * @param string $cellName Cell name such as `'B4'`
 	 * @return string|null an integer if the cell exists and contains a formula, `null` otherwise.
 	 * @throws \InvalidArgumentException if `$cellName` has an invalid format
 	 * @throws XlsxFastEditorFileFormatException
@@ -697,7 +697,7 @@ final class XlsxFastEditor
 	 * Read a float in the given worksheet at the given cell location.
 	 *
 	 * @param int $sheetNumber Worksheet number (base 1)
-	 * @param string $cellName Cell name such as `B4`
+	 * @param string $cellName Cell name such as `'B4'`
 	 * @return float|null a float if the cell exists and contains a number, `null` otherwise.
 	 * @throws \InvalidArgumentException if `$cellName` has an invalid format
 	 * @throws XlsxFastEditorFileFormatException
@@ -713,7 +713,7 @@ final class XlsxFastEditor
 	 * Read a date/time in the given worksheet at the given cell location.
 	 *
 	 * @param int $sheetNumber Worksheet number (base 1)
-	 * @param string $cellName Cell name such as `B4`
+	 * @param string $cellName Cell name such as `'B4'`
 	 * @return \DateTimeImmutable|null a date if the cell exists and contains a number, `null` otherwise.
 	 * @throws \InvalidArgumentException if `$cellName` has an invalid format
 	 * @throws XlsxFastEditorFileFormatException
@@ -729,7 +729,7 @@ final class XlsxFastEditor
 	 * Read an integer in the given worksheet at the given cell location.
 	 *
 	 * @param int $sheetNumber Worksheet number (base 1)
-	 * @param string $cellName Cell name such as `B4`
+	 * @param string $cellName Cell name such as `'B4'`
 	 * @return int|null an integer if the cell exists and contains a number, `null` otherwise.
 	 * @throws \InvalidArgumentException if `$cellName` has an invalid format
 	 * @throws XlsxFastEditorFileFormatException
@@ -769,7 +769,7 @@ final class XlsxFastEditor
 	 * compatible with the shared string approach.
 	 *
 	 * @param int $sheetNumber Worksheet number (base 1)
-	 * @param string $cellName Cell name such as `B4`
+	 * @param string $cellName Cell name such as `'B4'`
 	 * @return string|null a string if the cell exists and contains a value, `null` otherwise.
 	 * @throws \InvalidArgumentException if `$cellName` has an invalid format
 	 * @throws XlsxFastEditorFileFormatException
@@ -812,7 +812,7 @@ final class XlsxFastEditor
 	 * Read a hyperlink in the given worksheet at the given cell location.
 	 *
 	 * @param int $sheetNumber Worksheet number (base 1)
-	 * @param string $cellName Cell name such as `B4`
+	 * @param string $cellName Cell name such as `'B4'`
 	 * @return string|null a string if the cell exists and contains a hyperlink, `null` otherwise.
 	 * @throws \InvalidArgumentException if `$cellName` has an invalid format
 	 * @throws XlsxFastEditorFileFormatException
@@ -860,7 +860,7 @@ final class XlsxFastEditor
 	 * Warning: does not support the creation of a new hyperlink.
 	 *
 	 * @param int $sheetNumber Worksheet number (base 1)
-	 * @param string $cellName Cell name such as `B4`
+	 * @param string $cellName Cell name such as `'B4'`
 	 * @return bool True if the hyperlink could be replaced, false otherwise.
 	 * @throws \InvalidArgumentException if `$cellName` has an invalid format
 	 * @throws XlsxFastEditorFileFormatException
@@ -878,7 +878,7 @@ final class XlsxFastEditor
 	 * Removes the formulas of the cell, if any.
 	 *
 	 * @param int $sheetNumber Worksheet number (base 1)
-	 * @param string $cellName Cell name such as `B4`
+	 * @param string $cellName Cell name such as `'B4'`
 	 * @throws \InvalidArgumentException if `$cellName` has an invalid format
 	 * @throws XlsxFastEditorFileFormatException
 	 * @throws XlsxFastEditorXmlException
@@ -895,7 +895,7 @@ final class XlsxFastEditor
 	 * Removes the formulas of the cell, if any.
 	 *
 	 * @param int $sheetNumber Worksheet number (base 1)
-	 * @param string $cellName Cell name such as `B4`
+	 * @param string $cellName Cell name such as `'B4'`
 	 * @param float $value
 	 * @throws \InvalidArgumentException if `$cellName` has an invalid format
 	 * @throws XlsxFastEditorFileFormatException
@@ -913,7 +913,7 @@ final class XlsxFastEditor
 	 * Removes the formulas of the cell, if any.
 	 *
 	 * @param int $sheetNumber Worksheet number (base 1)
-	 * @param string $cellName Cell name such as `B4`
+	 * @param string $cellName Cell name such as `'B4'`
 	 * @param int $value
 	 * @throws \InvalidArgumentException if `$cellName` has an invalid format
 	 * @throws XlsxFastEditorFileFormatException
@@ -976,7 +976,7 @@ final class XlsxFastEditor
 	 * Removes the formulas of the cell, if any.
 	 *
 	 * @param int $sheetNumber Worksheet number (base 1)
-	 * @param string $cellName Cell name such as `B4`
+	 * @param string $cellName Cell name such as `'B4'`
 	 * @throws \InvalidArgumentException if `$cellName` has an invalid format
 	 * @throws XlsxFastEditorFileFormatException
 	 * @throws XlsxFastEditorXmlException

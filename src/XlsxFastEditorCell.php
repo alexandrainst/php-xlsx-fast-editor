@@ -228,7 +228,7 @@ final class XlsxFastEditorCell
 
 	/**
 	 * Clean the cell to have its value written.
-	 * @return \DOMElement The `<v>` value element of the provided cell, or null in case of error.
+	 * @return \DOMElement The `<v>` value element of the provided cell, or `null` in case of error.
 	 * @throws XlsxFastEditorXmlException
 	 */
 	private function initCellValue(): \DOMElement
