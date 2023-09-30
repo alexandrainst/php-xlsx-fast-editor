@@ -6,7 +6,7 @@
  *
  * @author Alexandre Alapetite <alexandre.alapetite@alexandra.dk>
  * @category PHP
- * @license https://gnu.org/licenses/agpl.html GNU AGPL
+ * @license https://gnu.org/licenses/lgpl.html GNU LGPL
  * @link https://github.com/alexandrainst/php-xlsx-fast-editor
  * @package XlsxFastEditor
  */

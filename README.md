@@ -137,4 +137,4 @@ Check [`composer.json`](./composer.json) for details.
 ## Credits
 
 Originally written by [Alexandre Alapetite](https://github.com/Alkarex) for the [Alexandra Institute](https://alexandra.dk/), 2023.
-License [GNU AGPL](https://gnu.org/licenses/agpl.html).
+License [GNU LGPL](https://gnu.org/licenses/lgpl.html).

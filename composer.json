@@ -13,7 +13,7 @@
 	],
 	"homepage": "https://github.com/alexandrainst/php-xlsx-fast-editor",
 	"type": "library",
-	"license": "AGPL-3.0-or-later",
+	"license": "LGPL-3.0-or-later",
 	"authors": [
 		{
 			"name": "Alexandre Alapetite",
