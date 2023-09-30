@@ -33,6 +33,7 @@ try {
 	assert($xlsxFastEditor->readFloat($sheet1, 'e5') === null);
 	assert($xlsxFastEditor->readInt($sheet1, 'c3') === -5);
 	assert($xlsxFastEditor->readInt($sheet1, 'F6') === null);
+	assert($xlsxFastEditor->readString($sheet1, 'B3') === 'déjà-vu');
 	assert($xlsxFastEditor->readString($sheet1, 'b4') === 'naïveté');
 	assert($xlsxFastEditor->readString($sheet1, 'F7') === null);
 	assert($xlsxFastEditor->readHyperlink($sheet1, 'B4') === 'https://example.net/');

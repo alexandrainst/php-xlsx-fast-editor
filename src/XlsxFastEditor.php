@@ -753,13 +753,16 @@ final class XlsxFastEditor
 		$stringNumber++;	// Base 1
 
 		$xpath = $this->getXPathFromPath(self::SHARED_STRINGS_PATH);
-		$ts = $xpath->query("/o:sst/o:si[$stringNumber][1]/o:t[1]");
+		$ts = $xpath->query("/o:sst/o:si[$stringNumber]//o:t");
 		if ($ts !== false && $ts->length > 0) {
-			$t = $ts[0];
-			if (!($t instanceof \DOMElement)) {
-				throw new XlsxFastEditorXmlException("Error querying XML shared string {$stringNumber}!");
+			$text = '';
+			foreach ($ts as $t) {
+				if (!($t instanceof \DOMElement)) {
+					throw new XlsxFastEditorXmlException("Error querying XML shared string {$stringNumber}!");
+				}
+				$text .= $t->nodeValue;
 			}
-			return $t->nodeValue;
+			return $text;
 		}
 		return null;
 	}
