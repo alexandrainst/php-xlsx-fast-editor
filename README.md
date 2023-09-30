@@ -18,7 +18,7 @@ There are also libraries to create new Excel documents from scratch, or for just
 `php-xlsx-fast-editor` addresses the need of quickly reading & writing & editing existing Excel documents,
 while reducing the risk of breaking anything.
 
-Note that to create a new document, you can just provide a blank Excel document as input.
+Note that to create a new document, you can just provide a blank or template Excel document as input.
 
 ## Use
 
@@ -127,7 +127,7 @@ try {
 
 ## Tips
 
-* ℹ️ Iterators (`rowsIterator()`, `cellsIterator()`) and navigation methods (`getNextCell()`, etc.) are faster than accessing a cell by name (`getCellOrNull()`) or a row by number (`getRow()`).
+* ℹ️ Iterators (`rowsIterator()`, `cellsIterator()`) and navigation methods (`getNextCell()`, etc.) are faster than accessing multiple cells by name (`getCellOrNull()`) or multiple rows by number (`getRow()`).
 
 ## Requirements
 
