@@ -49,15 +49,24 @@ final class XlsxFastEditorCell
 	}
 
 	/**
+	 * $return column name (e.g., `'D'`).
+	 * @throws XlsxFastEditorXmlException
+	 */
+	public static function nameToColumn(string $name): string
+	{
+		if (preg_match('/^([A-Z]+)/', $name, $matches) == 0 || empty($matches[1])) {
+			throw new XlsxFastEditorXmlException("Error querying column name for cell name {$name}!");
+		}
+		return $matches[1];
+	}
+
+	/**
 	 * Column name (e.g., `'D'`).
 	 * @throws XlsxFastEditorXmlException
 	 */
 	public function column(): string
 	{
-		if (preg_match('/^([A-Z]+)/', $this->name(), $matches) == 0 || empty($matches[1])) {
-			throw new XlsxFastEditorXmlException("Error querying column name for cell {$this->name()}!");
-		}
-		return $matches[1];
+		return self::nameToColumn($this->name());
 	}
 
 	/**

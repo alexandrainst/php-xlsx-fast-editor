@@ -565,6 +565,32 @@ final class XlsxFastEditor
 		return strcmp($ref1, $ref2);
 	}
 
+	/**
+	 * Gives the name of the highest column used in the spreadsheet (e.g. `BA`),
+	 * or null if there is none.
+	 * @throws XlsxFastEditorFileFormatException
+	 * @throws XlsxFastEditorXmlException
+	 */
+	public function getHighestColumnName(int $sheetNumber): ?string
+	{
+		$rightMostCell = '';
+		$xpath = $this->getXPathFromPath(self::getWorksheetPath($sheetNumber));
+		$cs = $xpath->query("/o:worksheet/o:sheetData/o:row/o:c[last()]");
+		if ($cs !== false) {
+			for ($i = 0; $i < $cs->length; $i++) {
+				$c = $cs[$i];
+				if (!($c instanceof \DOMElement)) {
+					throw new XlsxFastEditorXmlException("Error querying XML fragment for row {$sheetNumber}!");
+				}
+				$cellName = $c->getAttribute('r');
+				if ($cellName !== '' && ($rightMostCell === '' || self::cellOrderCompare($rightMostCell, $cellName) < 0)) {
+					$rightMostCell = $cellName;
+				}
+			}
+		}
+		return $rightMostCell === '' ? null : XlsxFastEditorCell::nameToColumn($rightMostCell);
+	}
+
 	/** To return `null` when accessing a row or cell that does not exist, e.g. via {@see XlsxFastEditor::getCell()} */
 	public const ACCESS_MODE_NULL = 0;
 	/** To throw an exception when accessing a row or cell that does not exist, e.g. via {@see XlsxFastEditor::getCell()} */

@@ -15,7 +15,7 @@ copy(__DIR__ . '/test.xlsx', __DIR__ . '/_copy.xlsx');
 try {
 	$xlsxFastEditor = new XlsxFastEditor(__DIR__ . '/_copy.xlsx');
 
-	assert($xlsxFastEditor->getWorksheetCount() === 2);
+	assert($xlsxFastEditor->getWorksheetCount() === 3);
 
 	date_default_timezone_set('UTC');
 	assert($xlsxFastEditor->getWorkbookDateSystem() === 1900);
@@ -62,6 +62,10 @@ try {
 	assert($xlsxFastEditor->getRow($sheet1, 2)?->number() === 2);
 	assert($xlsxFastEditor->getRow($sheet1, 3)?->getLastCell()?->name() === 'F3');
 	assert($xlsxFastEditor->getLastRow($sheet1)?->number() === 4);
+
+	$sheet3 = $xlsxFastEditor->getWorksheetNumber('Sheet3');
+	assert($sheet3 === 3);
+	assert($xlsxFastEditor->getHighestColumnName($sheet3) === 'G');
 
 	$row4 = $xlsxFastEditor->getRow($sheet1, 4);
 	assert($row4 !== null);

@@ -84,6 +84,8 @@ try {
 	$row = $row->getNextRow();
 	$row = $xlsxFastEditor->getLastRow($worksheetId1);
 
+	$xlsxFastEditor->getHighestColumnName($worksheetId1);
+
 	// Methods for rows
 	$rowNumber = $row->number();
 	$cell = $row->getCellOrNull('D2');
