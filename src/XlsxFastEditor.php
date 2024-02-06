@@ -335,7 +335,7 @@ final class XlsxFastEditor
 			}
 		}
 		if ($sheetCalcPr instanceof \DOMElement) {
-			$sheetCalcPr->setAttribute('fullCalcOnLoad', $value ? 'true' : 'false');
+			$sheetCalcPr->setAttribute('fullCalcOnLoad', $value ? '1' : '0');
 			$this->_touchWorksheet($sheetNumber);
 		}
 	}
