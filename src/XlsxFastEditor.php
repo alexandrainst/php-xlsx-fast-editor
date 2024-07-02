@@ -27,6 +27,7 @@ final class XlsxFastEditor
 	private const CALC_CHAIN_CACHE_PATH = 'xl/calcChain.xml';
 	private const SHARED_STRINGS_PATH = 'xl/sharedStrings.xml';
 	private const WORKBOOK_PATH = 'xl/workbook.xml';
+	private const WORKBOOK_RELS_PATH = 'xl/_rels/workbook.xml.rels';
 
 	private \ZipArchive $zip;
 
@@ -280,9 +281,24 @@ final class XlsxFastEditor
 	public function getWorksheetNumber(string $sheetName): int
 	{
 		$xpath = $this->getXPathFromPath(self::WORKBOOK_PATH);
-		$sheetId = $xpath->evaluate("normalize-space(/o:workbook/o:sheets/o:sheet[@name='$sheetName'][1]/@sheetId)");
-		if (is_string($sheetId)) {
-			return (int)$sheetId;
+		$xpath->registerNamespace('r', 'http://schemas.openxmlformats.org/officeDocument/2006/relationships');
+		$rId = $xpath->evaluate("normalize-space(/o:workbook/o:sheets/o:sheet[@name='$sheetName'][1]/@r:id)");
+		if (!is_string($rId) || $rId === '') {
+			return -1;
+		}
+
+		try {
+			$xpath = $this->getXPathFromPath(self::WORKBOOK_RELS_PATH);
+			$xpath->registerNamespace('pr', 'http://schemas.openxmlformats.org/package/2006/relationships');
+			$target = $xpath->evaluate("normalize-space(/pr:Relationships/pr:Relationship[@Id='$rId'][1]/@Target)");
+			if (is_string($target) && preg_match('/(\d+)/i', $target, $matches)) {
+				return (int)$matches[1];
+			}
+		} catch (XlsxFastEditorFileFormatException $ex) {	// phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch
+		}
+
+		if (preg_match('/(\d+)/i', $rId, $matches)) {
+			return (int)$matches[1];
 		}
 		return -1;
 	}
@@ -297,7 +313,7 @@ final class XlsxFastEditor
 	public function getWorksheetName(int $sheetNumber): ?string
 	{
 		$xpath = $this->getXPathFromPath(self::WORKBOOK_PATH);
-		$sheetName = $xpath->evaluate("normalize-space(/o:workbook/o:sheets/o:sheet[$sheetNumber][1]/@name)");
+		$sheetName = $xpath->evaluate("normalize-space(/o:workbook/o:sheets/o:sheet[$sheetNumber]/@name)");
 		return is_string($sheetName) ? $sheetName : null;
 	}
 

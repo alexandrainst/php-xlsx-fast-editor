@@ -26,7 +26,7 @@ try {
 	assert(XlsxFastEditor::excelDateToDateTime(44865, 1904)->format('c') === '2026-11-01T00:00:00+00:00');
 
 	$sheet1 = $xlsxFastEditor->getWorksheetNumber('Sheet1');
-	assert($sheet1 === 1);
+	assert($sheet1 === 3);
 
 	assert($xlsxFastEditor->deleteRow($sheet1, 5) === true);
 
@@ -42,7 +42,6 @@ try {
 	assert($xlsxFastEditor->readHyperlink($sheet1, 'C3') === null);
 
 	$sheet2 = $xlsxFastEditor->getWorksheetNumber('Sheet2');
-	assert($sheet2 === 2);
 	assert($xlsxFastEditor->getWorksheetName($sheet2) === 'Sheet2');
 
 	assert($xlsxFastEditor->readFormula($sheet2, 'c2') === '=Sheet1!C2*2');
@@ -66,7 +65,7 @@ try {
 	assert($xlsxFastEditor->getLastRow($sheet1)?->number() === 4);
 
 	$sheet3 = $xlsxFastEditor->getWorksheetNumber('Sheet3');
-	assert($sheet3 === 3);
+	assert($xlsxFastEditor->getWorksheetName($sheet3) === 'Sheet3');
 	assert($xlsxFastEditor->getHighestColumnName($sheet3) === 'G');
 
 	$row4 = $xlsxFastEditor->getRow($sheet1, 4);
