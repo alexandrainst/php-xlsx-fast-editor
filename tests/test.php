@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 assert_options(ASSERT_ACTIVE, true);	// phpcs:ignore Generic.PHP.DeprecatedFunctions.Deprecated
 assert_options(ASSERT_BAIL, true);	// phpcs:ignore Generic.PHP.DeprecatedFunctions.Deprecated
 assert_options(ASSERT_EXCEPTION, true);	// phpcs:ignore Generic.PHP.DeprecatedFunctions.Deprecated

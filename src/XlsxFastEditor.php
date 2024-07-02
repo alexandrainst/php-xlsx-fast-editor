@@ -11,6 +11,8 @@
  * @package XlsxFastEditor
  */
 
+declare(strict_types=1);
+
 namespace alexandrainst\XlsxFastEditor;
 
 /**

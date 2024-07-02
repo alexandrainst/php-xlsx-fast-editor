@@ -4,6 +4,8 @@
  * Modified from https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-4-autoloader-examples.md
  */
 
+declare(strict_types=1);
+
 spl_autoload_register(function (string $class): void {
 
 	// project-specific namespace prefix
