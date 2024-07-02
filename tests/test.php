@@ -1,9 +1,9 @@
 <?php
 
-assert_options(ASSERT_ACTIVE, true);
-assert_options(ASSERT_BAIL, true);
-assert_options(ASSERT_EXCEPTION, true);
-assert_options(ASSERT_WARNING, true);
+assert_options(ASSERT_ACTIVE, true);	// phpcs:ignore Generic.PHP.DeprecatedFunctions.Deprecated
+assert_options(ASSERT_BAIL, true);	// phpcs:ignore Generic.PHP.DeprecatedFunctions.Deprecated
+assert_options(ASSERT_EXCEPTION, true);	// phpcs:ignore Generic.PHP.DeprecatedFunctions.Deprecated
+assert_options(ASSERT_WARNING, true);	// phpcs:ignore Generic.PHP.DeprecatedFunctions.Deprecated
 
 require(__DIR__ . '/../autoload.php');
 
