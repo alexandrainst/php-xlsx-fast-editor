@@ -3,12 +3,12 @@
 	<arg name="extensions" value="php"/>
 	<arg name="tab-width" value="4"/>
 	<exclude-pattern>./vendor/</exclude-pattern>
-	<rule ref="PSR2">
+	<rule ref="PSR12">
 		<exclude name="Generic.WhiteSpace.DisallowTabIndent.NonIndentTabsUsed"/>
 		<exclude name="Generic.WhiteSpace.DisallowTabIndent.TabsUsed"/>
+		<exclude name="Generic.WhiteSpace.DisallowTabIndent.TabsUsedHeredocCloser"/>
 		<exclude name="PSR2.Methods.MethodDeclaration.Underscore"/>
 	</rule>
-	<rule ref="PSR12"/>
 	<rule ref="Generic.Classes.DuplicateClassName"/>
 	<rule ref="Generic.CodeAnalysis.EmptyStatement"/>
 	<rule ref="Generic.CodeAnalysis.UnconditionalIfStatement"/>
