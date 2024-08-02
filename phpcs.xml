@@ -2,6 +2,8 @@
 <ruleset name="XlsxFastEditor">
 	<arg name="extensions" value="php"/>
 	<arg name="tab-width" value="4"/>
+	<exclude-pattern>./.git/</exclude-pattern>
+	<exclude-pattern>./node_modules/</exclude-pattern>
 	<exclude-pattern>./vendor/</exclude-pattern>
 	<rule ref="PSR12">
 		<exclude name="Generic.WhiteSpace.DisallowTabIndent.NonIndentTabsUsed"/>
@@ -21,7 +23,11 @@
 		</properties>
 	</rule>
 	<rule ref="Generic.PHP.DeprecatedFunctions"/>
-	<rule ref="Generic.Strings.UnnecessaryStringConcat"/>
+	<rule ref="Generic.Strings.UnnecessaryStringConcat">
+		<properties>
+			<property name="allowMultiline" value="true"/>
+		</properties>
+	</rule>
 	<rule ref="Generic.WhiteSpace.DisallowSpaceIndent"/>
 	<rule ref="Squiz.Classes.ClassFileName.NoMatch"/>
 	<rule ref="Squiz.Commenting.ClassComment.Missing"/>
