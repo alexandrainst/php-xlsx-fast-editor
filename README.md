@@ -129,7 +129,8 @@ try {
 
 ## Tips
 
-* ℹ️ Iterators (`rowsIterator()`, `cellsIterator()`) and navigation methods (`getNextCell()`, etc.) are faster than accessing multiple cells by name (`getCellOrNull()`) or multiple rows by number (`getRow()`).
+* ℹ️ Iterators (`$x->rowsIterator()`, `$row->cellsIterator()`) and navigation methods (`$cell->getNextCell()`, etc.) are much faster than accessing
+multiple rows or cells by direct access (`$x->readString($worksheetId, 'A1')`, etc.), by name (`$row->getCellOrNull('A')`), or by number (`$x->getRow($worksheetId, 1)`).
 
 ## Requirements
 
