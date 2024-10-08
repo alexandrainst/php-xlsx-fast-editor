@@ -134,7 +134,9 @@ try {
 	// Regex
 	assert($xlsxFastEditor->textReplace('/Hello/i', 'World') > 0);
 
+	assert($xlsxFastEditor->getFullCalcOnLoad($sheet1) == null);
 	$xlsxFastEditor->setFullCalcOnLoad($sheet1, true);
+	assert($xlsxFastEditor->getFullCalcOnLoad($sheet1) === true);
 
 	$xlsxFastEditor->save();
 

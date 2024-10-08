@@ -359,6 +359,29 @@ final class XlsxFastEditor
 	}
 
 	/**
+	 * Get the *Full calculation on load* policy for the specified worksheet.
+	 * @param int $sheetNumber Worksheet number (base 1)
+	 * @throws XlsxFastEditorFileFormatException
+	 * @throws XlsxFastEditorXmlException
+	 */
+	public function getFullCalcOnLoad(int $sheetNumber): ?bool
+	{
+		$dom = $this->getDomFromPath(self::getWorksheetPath($sheetNumber));
+		$sheetCalcPrs = $dom->getElementsByTagName('sheetCalcPr');
+		if ($sheetCalcPrs->length > 0) {
+			$sheetCalcPr = $sheetCalcPrs[0];
+			if ($sheetCalcPr instanceof \DOMElement) {
+				$fullCalcOnLoad = $sheetCalcPr->getAttribute('fullCalcOnLoad');
+				if ($fullCalcOnLoad !== '') {
+					$fullCalcOnLoad = strtolower(trim($fullCalcOnLoad));
+					return in_array($fullCalcOnLoad, ['true', '1'], true);
+				}
+			}
+		}
+		return null;
+	}
+
+	/**
 	 * Get the row of the given number in the given worksheet.
 	 * @param int $sheetNumber Worksheet number (base 1)
 	 * @param int $rowNumber Number (ID) of the row (base 1). Warning: this is not an index (not all rows necessarily exist in a sequence)

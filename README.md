@@ -50,8 +50,10 @@ try {
 	$nbWorksheets = $xlsxFastEditor->getWorksheetCount();
 	$worksheetName = $xlsxFastEditor->getWorksheetName(1);
 	$worksheetId1 = $xlsxFastEditor->getWorksheetNumber('Sheet1');
+
 	// If you want to force Excel to recalculate formulas on next load:
 	$xlsxFastEditor->setFullCalcOnLoad($worksheetId1, true);
+	$fullCalcOnLoad = $xlsxFastEditor->getFullCalcOnLoad($worksheetId1);
 
 	// Direct read/write access
 	$fx = $xlsxFastEditor->readFormula($worksheetId1, 'A1');
