@@ -1,6 +1,8 @@
 parameters:
-	level: 9
-	treatPhpDocTypesAsCertain: false
+	phpVersion:
+		min: 70400	# PHP 7.4
+		max: 80499	# PHP 8.4
+	level: 10	# https://phpstan.org/user-guide/rule-levels
 	fileExtensions:
 		- php
 	paths:
@@ -8,20 +10,17 @@ parameters:
 	excludePaths:
 		analyseAndScan:
 			- vendor/
+	checkBenevolentUnionTypes: true
+	checkImplicitMixed: false	# TODO pass
+	checkMissingOverrideMethodAttribute: true
+	checkTooWideReturnTypesInProtectedAndPublicMethods: true
+	reportAnyTypeWideningInVarTag: true
+	treatPhpDocTypesAsCertain: false
 	strictRules:
-		allRules: false
-		booleansInConditions: true
-		closureUsesThis: true
-		disallowedConstructs: false
+		disallowedEmpty: false
 		disallowedLooseComparison: false
-		matchingInheritedMethodNames: true
-		noVariableVariables: true
-		numericOperandsInArithmeticOperators: true
-		overwriteVariablesWithLoop: true
-		requireParentConstructorCall: true
-		strictCalls: true
-		switchConditionsMatchingType: true
-		uselessCast: true
+		disallowedShortTernary: false
+		strictArrayFilter: false	# TODO pas
 	exceptions:
 		check:
 			missingCheckedExceptionInThrows: true

@@ -278,7 +278,7 @@ final class XlsxFastEditorCell
 	}
 
 	/**
-	 * Write a formulat, without changing the type/style of the cell.
+	 * Write a formula, without changing the type/style of the cell.
 	 * Removes the formulas of the cell, if any.
 	 * @throws XlsxFastEditorXmlException
 	 */
@@ -308,9 +308,13 @@ final class XlsxFastEditorCell
 		}
 		try {
 			$f = $dom->createElement('f', $value);
+			if (!($f instanceof \DOMElement)) {
+				throw new XlsxFastEditorXmlException("Error creating DOMElement of formula for cell {$this->name()}!");
+			}
 		} catch (\DOMException $dex) {
-			throw new XlsxFastEditorXmlException("Error creating formulat for cell {$this->name()}!", $dex->code, $dex);
+			throw new XlsxFastEditorXmlException("Error creating formula for cell {$this->name()}!", $dex->code, $dex);
 		}
+
 		$this->c->appendChild($f);
 
 		$this->editor->_clearCalcChain();

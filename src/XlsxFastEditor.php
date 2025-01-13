@@ -255,7 +255,7 @@ final class XlsxFastEditor
 		try {
 			return $excelBaseDate->add(new \DateInterval($iso8601));
 		} catch (\Exception $ex) {
-			throw new \InvalidArgumentException('Invalid date!', $ex->getCode(), $ex);
+			throw new \InvalidArgumentException('Invalid date!', is_int($ex->getCode()) ? $ex->getCode() : 0, $ex);
 		}
 	}
 
@@ -347,7 +347,11 @@ final class XlsxFastEditor
 						throw new XlsxFastEditorXmlException("Error creating XML fragment for setFullCalcOnLoad!", $dex->code, $dex);
 					}
 					if ($sheetCalcPr !== false && $sheetData->parentNode !== null) {
-						$sheetData->parentNode->insertBefore($sheetCalcPr, $sheetData->nextSibling);
+						if ($sheetData->nextSibling === null) {
+							$sheetData->parentNode->appendChild($sheetCalcPr);
+						} else {
+							$sheetData->parentNode->insertBefore($sheetCalcPr, $sheetData->nextSibling);
+						}
 					}
 				}
 			}
@@ -943,7 +947,7 @@ final class XlsxFastEditor
 	}
 
 	/**
-	 * Write a formulat in the given worksheet at the given cell location, without changing the type/style of the cell.
+	 * Write a formula in the given worksheet at the given cell location, without changing the type/style of the cell.
 	 * Auto-creates the cell if it does not already exists.
 	 * Removes the formulas of the cell, if any.
 	 *

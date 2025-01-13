@@ -22,7 +22,7 @@ spl_autoload_register(function (string $class): void {
 	}
 
 	$relative_class = substr($class, $len);
-	$file = $base_dir . str_replace('\\', DIRECTORY_SEPARATOR, $relative_class) . '.php';
+	$file = $base_dir . str_replace('\\', DIRECTORY_SEPARATOR, $relative_class ?: '_') . '.php';
 
 	if (file_exists($file)) {
 		require $file;
