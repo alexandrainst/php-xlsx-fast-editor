@@ -10,6 +10,9 @@ trim_trailing_whitespace = true
 indent_size = 4
 indent_style = tab
 
+[*.neon]
+indent_style = tab
+
 [*.php]
 indent_style = tab
 
