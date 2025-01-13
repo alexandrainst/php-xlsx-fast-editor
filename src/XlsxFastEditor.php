@@ -195,7 +195,7 @@ final class XlsxFastEditor
 	public function getWorkbookDateSystem(): int
 	{
 		static $baseYear = 0;
-		if ($baseYear == 0) {
+		if ($baseYear == 0 || !in_array($baseYear, [1900, 1904], true)) {
 			$xpath = $this->getXPathFromPath(self::WORKBOOK_PATH);
 			$date1904 = $xpath->evaluate('normalize-space(/o:workbook/o:workbookPr/@date1904)');
 			if (is_string($date1904) && in_array(strtolower(trim($date1904)), ['true', '1'], true)) {
@@ -228,13 +228,13 @@ final class XlsxFastEditor
 				$excelDateTime++;
 			}
 			// 1 January 1900 as serial number 1 in the 1900 Date System, accounting for leap year problem
-			if ($baseDate1900 === null) {
+			if (!($baseDate1900 instanceof \DateTimeImmutable)) {
 				$baseDate1900 = new \DateTimeImmutable('1899-12-30');
 			}
 			$excelBaseDate = $baseDate1900;
 		} elseif ($workbookDateSystem === 1904) {
 			// 1 January 1904 as serial number 0 in the 1904 Date System
-			if ($baseDate1904 === null) {
+			if (!($baseDate1904 instanceof \DateTimeImmutable)) {
 				$baseDate1904 = new \DateTimeImmutable('1904-01-01');
 			}
 			$excelBaseDate = $baseDate1904;
@@ -438,10 +438,14 @@ final class XlsxFastEditor
 
 					// Excel expects the lines to be sorted
 					$sibling = $sheetData->firstElementChild;
-					while ($sibling !== null && (int)$sibling->getAttribute('r') < $rowNumber) {
+					while ($sibling instanceof \DOMElement && (int)$sibling->getAttribute('r') < $rowNumber) {
 						$sibling = $sibling->nextElementSibling;
 					}
-					$sheetData->insertBefore($row, $sibling);
+					if ($sibling instanceof \DOMElement) {
+						$sheetData->insertBefore($row, $sibling);
+					} else {
+						$sheetData->appendChild($row);
+					}
 					break;
 				default:
 				case XlsxFastEditor::ACCESS_MODE_NULL:
@@ -1032,6 +1036,9 @@ final class XlsxFastEditor
 			throw new XlsxFastEditorXmlException('Error creating <t> in shared strings!');
 		}
 		$si->appendChild($t);
+		if (!($dom->firstElementChild instanceof \DOMElement)) {
+			throw new XlsxFastEditorXmlException('Invalid shared strings!');
+		}
 		$dom->firstElementChild->appendChild($si);
 
 		$count = (int)$dom->firstElementChild->getAttribute('count');

@@ -11,7 +11,6 @@ parameters:
 		analyseAndScan:
 			- vendor/
 	checkBenevolentUnionTypes: true
-	checkImplicitMixed: false	# TODO pass
 	checkMissingOverrideMethodAttribute: true
 	checkTooWideReturnTypesInProtectedAndPublicMethods: true
 	reportAnyTypeWideningInVarTag: true
@@ -20,7 +19,6 @@ parameters:
 		disallowedEmpty: false
 		disallowedLooseComparison: false
 		disallowedShortTernary: false
-		strictArrayFilter: false	# TODO pas
 	exceptions:
 		check:
 			missingCheckedExceptionInThrows: true

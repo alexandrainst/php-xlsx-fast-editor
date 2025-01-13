@@ -78,7 +78,7 @@ final class XlsxFastEditorCell
 	public function getPreviousCell(): ?XlsxFastEditorCell
 	{
 		$c = $this->c->previousElementSibling;
-		while ($c !== null) {
+		while ($c instanceof \DOMElement) {
 			if ($c->localName === 'c') {
 				return new XlsxFastEditorCell($this->editor, $this->sheetNumber, $c);
 			}
@@ -94,7 +94,7 @@ final class XlsxFastEditorCell
 	public function getNextCell(): ?XlsxFastEditorCell
 	{
 		$c = $this->c->nextElementSibling;
-		while ($c !== null) {
+		while ($c instanceof \DOMElement) {
 			if ($c->localName === 'c') {
 				return new XlsxFastEditorCell($this->editor, $this->sheetNumber, $c);
 			}

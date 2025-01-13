@@ -57,7 +57,7 @@ final class XlsxFastEditorRow
 	public function getPreviousRow(): ?XlsxFastEditorRow
 	{
 		$r = $this->r->previousElementSibling;
-		while ($r !== null) {
+		while ($r instanceof \DOMElement) {
 			if ($r->localName === 'row') {
 				return new XlsxFastEditorRow($this->editor, $this->sheetNumber, $r);
 			}
@@ -73,7 +73,7 @@ final class XlsxFastEditorRow
 	public function getNextRow(): ?XlsxFastEditorRow
 	{
 		$r = $this->r->nextElementSibling;
-		while ($r !== null) {
+		while ($r instanceof \DOMElement) {
 			if ($r->localName === 'row') {
 				return new XlsxFastEditorRow($this->editor, $this->sheetNumber, $r);
 			}
@@ -90,7 +90,7 @@ final class XlsxFastEditorRow
 	public function cellsIterator(): \Traversable
 	{
 		$c = $this->r->firstElementChild;
-		while ($c !== null) {
+		while ($c instanceof \DOMElement) {
 			if ($c->localName === 'c') {
 				yield new XlsxFastEditorCell($this->editor, $this->sheetNumber, $c);
 			}
@@ -106,7 +106,7 @@ final class XlsxFastEditorRow
 	public function getFirstCell(): ?XlsxFastEditorCell
 	{
 		$c = $this->r->firstElementChild;
-		while ($c !== null) {
+		while ($c instanceof \DOMElement) {
 			if ($c->localName === 'c') {
 				return new XlsxFastEditorCell($this->editor, $this->sheetNumber, $c);
 			}
@@ -172,10 +172,14 @@ final class XlsxFastEditorRow
 
 			// Excel expects the cells to be sorted
 			$sibling = $this->r->firstElementChild;
-			while ($sibling !== null && XlsxFastEditor::cellOrderCompare($sibling->getAttribute('r'), $cellName) < 0) {
+			while ($sibling instanceof \DOMElement && XlsxFastEditor::cellOrderCompare($sibling->getAttribute('r'), $cellName) < 0) {
 				$sibling = $sibling->nextElementSibling;
 			}
-			$this->r->insertBefore($c, $sibling);
+			if ($sibling instanceof \DOMElement) {
+				$this->r->insertBefore($c, $sibling);
+			} else {
+				$this->r->appendChild($c);
+			}
 		}
 
 		if ($c === null) {
@@ -233,7 +237,7 @@ final class XlsxFastEditorRow
 	public function getLastCell(): ?XlsxFastEditorCell
 	{
 		$c = $this->r->lastElementChild;
-		while ($c !== null) {
+		while ($c instanceof \DOMElement) {
 			if ($c->localName === 'c') {
 				return new XlsxFastEditorCell($this->editor, $this->sheetNumber, $c);
 			}
