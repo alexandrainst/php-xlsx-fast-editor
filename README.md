@@ -136,7 +136,7 @@ multiple rows or cells by direct access (`$x->readString($worksheetId, 'A1')`, e
 
 ## Requirements
 
-PHP 7.4+ with ZIP and XML extensions.
+PHP 8.0+ with ZIP and XML extensions.
 Check [`composer.json`](./composer.json) for details.
 
 ## Credits
