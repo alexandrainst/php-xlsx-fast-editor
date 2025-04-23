@@ -1035,6 +1035,9 @@ final class XlsxFastEditor
 			}
 			// Add content as a text node
 			$textNode = $dom->createTextNode($value);
+			if ($textNode === false) {
+				throw new XlsxFastEditorXmlException('Failed to create <t> text node');
+			}
 			$t->appendChild($textNode);
 		} catch (\DOMException $dex) {
 			throw new XlsxFastEditorXmlException('Error creating <t> in shared strings!', $dex->code, $dex);
