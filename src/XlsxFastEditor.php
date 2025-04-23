@@ -1028,12 +1028,16 @@ final class XlsxFastEditor
 		}
 
 		try {
-			$t = $dom->createElement('t', $value);
+			// First, we create an empty element t
+			$t = $dom->createElement('t');
+			if ($t === false) {
+				throw new XlsxFastEditorXmlException('Failed to create <t> element');
+			}
+			// Add content as a text node
+			$textNode = $dom->createTextNode($value);
+			$t->appendChild($textNode);
 		} catch (\DOMException $dex) {
 			throw new XlsxFastEditorXmlException('Error creating <t> in shared strings!', $dex->code, $dex);
-		}
-		if ($t === false) {
-			throw new XlsxFastEditorXmlException('Error creating <t> in shared strings!');
 		}
 		$si->appendChild($t);
 		if (!($dom->firstElementChild instanceof \DOMElement)) {
@@ -1048,7 +1052,7 @@ final class XlsxFastEditor
 		$dom->firstElementChild->setAttribute('uniqueCount', (string)$uniqueCount);
 
 		$this->touchPath(self::SHARED_STRINGS_PATH);
-		return $uniqueCount - 1;	// Base 0
+		return $uniqueCount - 1; // Base 0
 	}
 
 	/**
