@@ -307,10 +307,17 @@ final class XlsxFastEditorCell
 			throw new XlsxFastEditorXmlException("Internal error accessing cell {$this->name()}!");
 		}
 		try {
-			$f = $dom->createElement('f', $value);
-			if (!($f instanceof \DOMElement)) {
+			// First, we create an empty element t
+			$f = $dom->createElement('f');
+			if ($f === false) {
 				throw new XlsxFastEditorXmlException("Error creating DOMElement of formula for cell {$this->name()}!");
 			}
+			// Add content as a text node
+			$textNode = $dom->createTextNode($value);
+			if ($textNode === false) {
+				throw new XlsxFastEditorXmlException("Error creating text node of formula for cell {$this->name()}!");
+			}
+			$f->appendChild($textNode);
 		} catch (\DOMException $dex) {
 			throw new XlsxFastEditorXmlException("Error creating formula for cell {$this->name()}!", $dex->code, $dex);
 		}
