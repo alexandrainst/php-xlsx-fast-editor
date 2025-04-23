@@ -1052,7 +1052,7 @@ final class XlsxFastEditor
 		$dom->firstElementChild->setAttribute('uniqueCount', (string)$uniqueCount);
 
 		$this->touchPath(self::SHARED_STRINGS_PATH);
-		return $uniqueCount - 1; // Base 0
+		return $uniqueCount - 1;	// Base 0
 	}
 
 	/**
