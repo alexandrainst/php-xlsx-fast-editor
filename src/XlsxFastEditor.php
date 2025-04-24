@@ -1028,12 +1028,19 @@ final class XlsxFastEditor
 		}
 
 		try {
-			$t = $dom->createElement('t', $value);
+			// First, we create an empty element t
+			$t = $dom->createElement('t');
+			if ($t === false) {
+				throw new XlsxFastEditorXmlException('Failed to create <t> element');
+			}
+			// Add content as a text node
+			$textNode = $dom->createTextNode($value);
+			if ($textNode === false) {
+				throw new XlsxFastEditorXmlException('Failed to create <t> text node');
+			}
+			$t->appendChild($textNode);
 		} catch (\DOMException $dex) {
 			throw new XlsxFastEditorXmlException('Error creating <t> in shared strings!', $dex->code, $dex);
-		}
-		if ($t === false) {
-			throw new XlsxFastEditorXmlException('Error creating <t> in shared strings!');
 		}
 		$si->appendChild($t);
 		if (!($dom->firstElementChild instanceof \DOMElement)) {

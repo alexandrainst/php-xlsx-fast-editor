@@ -119,6 +119,10 @@ try {
 	$xlsxFastEditor->writeInt($sheet2, 'C3', -7);
 	$xlsxFastEditor->writeFloat($sheet2, 'D3', 273.15);
 
+	// Writing special XML characters
+	$xlsxFastEditor->writeString($sheet2, 'B5', '< " & \' >');
+	$xlsxFastEditor->writeFormula($sheet2, 'C5', '=LEN("< & \' >")');
+
 	// Writing non-existing cells but existing lines
 	$xlsxFastEditor->writeFormula($sheet2, 'I2', '=7*3');
 	$xlsxFastEditor->writeString($sheet2, 'F2', 'γ');
@@ -165,6 +169,10 @@ try {
 	assert($xlsxFastEditor->readFloat($sheet2, 'D10') === -273.15);
 
 	assert($xlsxFastEditor->readString($sheet1, 'B2') === 'World');
+
+	// Test special XML characters
+	assert($xlsxFastEditor->readString($sheet2, 'B5') === '< " & \' >');
+	assert($xlsxFastEditor->readFormula($sheet2, 'C5') === '=LEN("< & \' >")');
 
 	$xlsxFastEditor->close();
 
