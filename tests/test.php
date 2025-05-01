@@ -21,8 +21,11 @@ try {
 
 	date_default_timezone_set('UTC');
 	assert($xlsxFastEditor->getWorkbookDateSystem() === 1900);
+	// @phpstan-ignore staticMethod.internal
 	assert(XlsxFastEditor::excelDateToDateTime(0.5, 1900)->format('c') === '1900-01-01T12:00:00+00:00');
+	// @phpstan-ignore staticMethod.internal
 	assert(XlsxFastEditor::excelDateToDateTime(32, 1900)->format('c') === '1900-02-01T00:00:00+00:00');
+	// @phpstan-ignore staticMethod.internal
 	assert(XlsxFastEditor::excelDateToDateTime(44865, 1904)->format('c') === '2026-11-01T00:00:00+00:00');
 
 	$sheet1 = $xlsxFastEditor->getWorksheetNumber('Sheet1');
@@ -82,6 +85,7 @@ try {
 	}
 	assert($ex instanceof \InvalidArgumentException);
 
+	// @phpstan-ignore method.internal
 	$cellD4 = $row4->getCell('D4');
 	assert($cellD4 !== null);
 	assert($cellD4->getPreviousCell()?->getNextCell()?->name() === 'D4');
