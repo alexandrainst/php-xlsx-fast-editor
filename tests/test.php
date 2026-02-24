@@ -24,9 +24,15 @@ try {
 	// @phpstan-ignore staticMethod.internal
 	assert(XlsxFastEditor::excelDateToDateTime(0.5, 1900)->format('c') === '1900-01-01T12:00:00+00:00');
 	// @phpstan-ignore staticMethod.internal
+	assert(XlsxFastEditor::dateTimeToExcelDate(new \DateTimeImmutable('1900-01-01T12:00:00+00:00'), 1900) === 0.5);
+	// @phpstan-ignore staticMethod.internal
 	assert(XlsxFastEditor::excelDateToDateTime(32, 1900)->format('c') === '1900-02-01T00:00:00+00:00');
 	// @phpstan-ignore staticMethod.internal
+	assert(XlsxFastEditor::dateTimeToExcelDate(new \DateTimeImmutable('1900-02-01T00:00:00+00:00'), 1900) === 32.0);
+	// @phpstan-ignore staticMethod.internal
 	assert(XlsxFastEditor::excelDateToDateTime(44865, 1904)->format('c') === '2026-11-01T00:00:00+00:00');
+	// @phpstan-ignore staticMethod.internal
+	assert(XlsxFastEditor::dateTimeToExcelDate(new \DateTimeImmutable('2026-11-01T00:00:00+00:00'), 1904) === 44865.0);
 
 	$sheet1 = $xlsxFastEditor->getWorksheetNumber('Sheet1');
 	assert($sheet1 === 3);
@@ -54,6 +60,8 @@ try {
 	assert($xlsxFastEditor->readString($sheet2, 'B3') === 'déjà-vu');
 
 	assert($xlsxFastEditor->readDateTime($sheet1, 'F2')?->format('c') === '1980-11-24T00:00:00+00:00');
+	$xlsxFastEditor->writeDateTime($sheet1, 'F2', new \DateTimeImmutable('1980-11-25T11:22:33.456+00:00'));
+	assert($xlsxFastEditor->readDateTime($sheet1, 'F2')?->format('Y-m-d\TH:i:s.vP') === '1980-11-25T11:22:33.456+00:00');
 	assert($xlsxFastEditor->readDateTime($sheet1, 'F3')?->format('c') === '1980-11-24T10:20:30+00:00');
 	assert($xlsxFastEditor->readDateTime($sheet1, 'F4')?->format('c') === '1900-01-01T10:20:30+00:00');
 

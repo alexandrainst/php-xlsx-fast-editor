@@ -243,20 +243,64 @@ final class XlsxFastEditor
 		}
 
 		$daysOffset = floor($excelDateTime);
-		$iso8601 = "P{$daysOffset}D";
-
 		$timeFraction = $excelDateTime - $daysOffset;
-		if ($timeFraction > 0) {
-			// Convert days to seconds with no more than milliseconds precision
-			$seconds = floor($timeFraction * 86400000) / 1000;
-			$iso8601 .= "T{$seconds}S";
-		}
 
 		try {
-			return $excelBaseDate->add(new \DateInterval($iso8601));
+			$date = $excelBaseDate->add(new \DateInterval("P{$daysOffset}D"));
+			if ($timeFraction > 0) {
+				// Convert days to seconds with no more than milliseconds precision
+				$milliSeconds = (int)round($timeFraction * 86400000);
+				$seconds = (int)floor($milliSeconds / 1000);
+				$ms = $milliSeconds % 1000;
+				$date = $date->modify("+{$seconds} seconds");
+				if ($date === false) {
+					throw new \InvalidArgumentException('Invalid date time fraction (seconds)!');
+				}
+				if ($ms > 0) {
+					$date = $date->modify("+{$ms} milliseconds");
+					if ($date === false) {
+						throw new \InvalidArgumentException('Invalid date time fraction (milliseconds)!');
+					}
+				}
+			}
+			return $date;
 		} catch (\Exception $ex) {
 			throw new \InvalidArgumentException('Invalid date!', is_int($ex->getCode()) ? $ex->getCode() : 0, $ex);
 		}
+	}
+
+	/**
+	 * Convert a standard `DateTime` to an internal Excel float representation.
+	 * @param int $workbookDateSystem {@see XlsxFastEditor::getWorkbookDateSystem()}
+	 * @phpstan-param 1900|1904 $workbookDateSystem
+	 * @internal
+	 * @throws \InvalidArgumentException
+	 */
+	public static function dateTimeToExcelDate(\DateTimeInterface $dateTime, int $workbookDateSystem = 1900): float
+	{
+		if ($workbookDateSystem === 1900) {
+			$baseDate = new \DateTimeImmutable('1899-12-30');
+		} elseif ($workbookDateSystem === 1904) {
+			$baseDate = new \DateTimeImmutable('1904-01-01');
+		} else {
+			throw new \InvalidArgumentException('Invalid Excel workbook date system! Supported values: 1900, 1904');
+		}
+
+		$diff = $baseDate->diff($dateTime);
+		$excelDateTime = (float)$diff->days;
+		if ($diff->invert) {
+			$excelDateTime = -$excelDateTime;
+		}
+		$excelDateTime += ($diff->h / 24) + ($diff->i / 1440) + (($diff->s + $diff->f) / 86400);
+
+		if ($workbookDateSystem === 1900 && $excelDateTime < 61) {
+			$excelDateTime -= 1;
+			if ($excelDateTime < 2) {
+				$excelDateTime -= 1;
+			}
+		}
+
+		return $excelDateTime;
 	}
 
 	/**
@@ -1001,6 +1045,23 @@ final class XlsxFastEditor
 	{
 		$cell = $this->getCellAutocreate($sheetNumber, $cellName);
 		$cell->writeInt($value);
+	}
+
+	/**
+	 * Write the date/time value in the given worksheet at the given cell location, without changing the type/style of the cell.
+	 * Auto-creates the cell if it does not already exists.
+	 * Removes the formulas of the cell, if any.
+	 *
+	 * @param int $sheetNumber Worksheet number (base 1)
+	 * @param string $cellName Cell name such as `'B4'`
+	 * @throws \InvalidArgumentException if `$cellName` has an invalid format
+	 * @throws XlsxFastEditorFileFormatException
+	 * @throws XlsxFastEditorXmlException
+	 */
+	public function writeDateTime(int $sheetNumber, string $cellName, \DateTimeInterface $value): void
+	{
+		$cell = $this->getCellAutocreate($sheetNumber, $cellName);
+		$cell->writeDateTime($value);
 	}
 
 	/**

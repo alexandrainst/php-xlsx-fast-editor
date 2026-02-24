@@ -353,6 +353,20 @@ final class XlsxFastEditorCell
 	}
 
 	/**
+	 * Write the date/time value of the cell, without changing the type/style of the cell.
+	 * Removes the formulas of the cell, if any.
+	 * @param \DateTimeInterface $value
+	 * @throws \InvalidArgumentException
+	 * @throws XlsxFastEditorFileFormatException
+	 * @throws XlsxFastEditorXmlException
+	 */
+	public function writeDateTime(\DateTimeInterface $value): void
+	{
+		$floatValue = XlsxFastEditor::dateTimeToExcelDate($value, $this->editor->getWorkbookDateSystem());
+		$this->writeNumber($floatValue);
+	}
+
+	/**
 	 * Write an integer, without changing the type/style of the cell.
 	 * Removes the formulas of the cell, if any.
 	 * @param int $value
