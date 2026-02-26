@@ -242,31 +242,26 @@ final class XlsxFastEditor
 			throw new \InvalidArgumentException('Invalid Excel workbook date system! Supported values: 1900, 1904');
 		}
 
-		$daysOffset = floor($excelDateTime);
+		$daysOffset = (int)floor($excelDateTime);
 		$timeFraction = $excelDateTime - $daysOffset;
 
-		try {
-			$date = $excelBaseDate->add(new \DateInterval("P{$daysOffset}D"));
-			if ($timeFraction > 0) {
-				// Convert days to seconds with no more than milliseconds precision
-				$milliSeconds = (int)round($timeFraction * 86400000);
-				$seconds = (int)floor($milliSeconds / 1000);
-				$ms = $milliSeconds % 1000;
-				$date = $date->modify("+{$seconds} seconds");
-				if ($date === false) {
-					throw new \InvalidArgumentException('Invalid date time fraction (seconds)!');
-				}
-				if ($ms > 0) {
-					$date = $date->modify("+{$ms} milliseconds");
-					if ($date === false) {
-						throw new \InvalidArgumentException('Invalid date time fraction (milliseconds)!');
-					}
-				}
-			}
-			return $date;
-		} catch (\Exception $ex) {
-			throw new \InvalidArgumentException('Invalid date!', is_int($ex->getCode()) ? $ex->getCode() : 0, $ex);
+		// Using modify() is safer than new \DateInterval() because it handles negative numbers.
+		$date = $excelBaseDate->modify("{$daysOffset} days");
+		if ($date === false) {
+			throw new \InvalidArgumentException('Invalid date offset!');
 		}
+		if ($timeFraction > 0) {
+			// setTime() rolls over large values correctly and avoids large integer overflow on 32-bit systems.
+			$totalSeconds = $timeFraction * 86400;
+			$seconds = (int)floor($totalSeconds);
+			$microSeconds = (int)round(($totalSeconds - $seconds) * 1000000);
+			$newDate = $date->setTime(0, 0, $seconds, $microSeconds);
+			if ($newDate === false) {
+				throw new \InvalidArgumentException('Invalid date time fraction!');
+			}
+			$date = $newDate;
+		}
+		return $date;
 	}
 
 	/**

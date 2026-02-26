@@ -337,7 +337,12 @@ final class XlsxFastEditorCell
 	private function writeNumber($value): void
 	{
 		$v = $this->initCellValue();
-		$v->nodeValue = (string)$value;
+		if (is_float($value)) {
+			// Ensure sufficient precision for floating point numbers (default precision=14)
+			$v->nodeValue = sprintf('%.16H', $value);
+		} else {
+			$v->nodeValue = (string)$value;
+		}
 		$this->editor->_touchWorksheet($this->sheetNumber);
 	}
 

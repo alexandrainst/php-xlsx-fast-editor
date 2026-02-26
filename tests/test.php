@@ -61,8 +61,8 @@ try {
 
 	assert($xlsxFastEditor->readDateTime($sheet1, 'F2')?->format('c') === '1980-11-24T00:00:00+00:00');
 	$xlsxFastEditor->writeDateTime($sheet1, 'F2', new \DateTimeImmutable('1980-11-25T11:22:33.456+00:00'));
-	assert($xlsxFastEditor->readDateTime($sheet1, 'F2')?->format('Y-m-d\TH:i:s.vP') === '1980-11-25T11:22:33.456+00:00');
-	assert($xlsxFastEditor->readDateTime($sheet1, 'F3')?->format('c') === '1980-11-24T10:20:30+00:00');
+	assert($xlsxFastEditor->readDateTime($sheet1, 'F2')?->format('Y-m-d\\TH:i:s.vP') === '1980-11-25T11:22:33.456+00:00');
+	assert($xlsxFastEditor->readDateTime($sheet1, 'F3')?->format('Y-m-d\\TH:i:s.vP') === '1980-11-24T10:20:30.456+00:00');
 	assert($xlsxFastEditor->readDateTime($sheet1, 'F4')?->format('c') === '1900-01-01T10:20:30+00:00');
 
 	assert($xlsxFastEditor->readArray($sheet1)['B'][2] === 'Hello');
