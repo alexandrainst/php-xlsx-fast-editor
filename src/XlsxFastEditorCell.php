@@ -337,7 +337,12 @@ final class XlsxFastEditorCell
 	private function writeNumber($value): void
 	{
 		$v = $this->initCellValue();
-		$v->nodeValue = (string)$value;
+		if (is_float($value)) {
+			// Ensure sufficient precision for floating point numbers (default precision=14)
+			$v->nodeValue = sprintf('%.16H', $value);
+		} else {
+			$v->nodeValue = (string)$value;
+		}
 		$this->editor->_touchWorksheet($this->sheetNumber);
 	}
 
@@ -350,6 +355,20 @@ final class XlsxFastEditorCell
 	public function writeFloat(float $value): void
 	{
 		$this->writeNumber($value);
+	}
+
+	/**
+	 * Write the date/time value of the cell, without changing the type/style of the cell.
+	 * Removes the formulas of the cell, if any.
+	 * @param \DateTimeInterface $value
+	 * @throws \InvalidArgumentException
+	 * @throws XlsxFastEditorFileFormatException
+	 * @throws XlsxFastEditorXmlException
+	 */
+	public function writeDateTime(\DateTimeInterface $value): void
+	{
+		$floatValue = XlsxFastEditor::dateTimeToExcelDate($value, $this->editor->getWorkbookDateSystem());
+		$this->writeNumber($floatValue);
 	}
 
 	/**

@@ -67,6 +67,7 @@ try {
 	$xlsxFastEditor->writeFloat($worksheetId1, 'B2', 3.14);
 	$xlsxFastEditor->writeInt($worksheetId1, 'C3', 13);
 	$xlsxFastEditor->writeString($worksheetId1, 'D4', 'Hello');
+	$xlsxFastEditor->writeDateTime($worksheetId1, 'F4', new \DateTimeImmutable('2026-02-26'));
 	$xlsxFastEditor->writeHyperlink($worksheetId1, 'B4', 'https://example.net/');	// Only for cells with an existing hyperlink
 
 	// Read as array
@@ -112,6 +113,7 @@ try {
 	$cell->writeFloat(3.14);
 	$cell->writeInt(13);
 	$cell->writeString('Hello');
+	$cell->writeDateTime(new \DateTimeImmutable('1980-11-24'));
 	$cell->writeHyperlink('https://example.net/');	// Only for cells with an existing hyperlink
 
 	// Iterators for existing rows and cells
