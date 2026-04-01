@@ -160,11 +160,7 @@ final class XlsxFastEditorRow
 			}
 
 			$dom = $xpath->document;
-			try {
-				$c = $dom->createElement('c');
-			} catch (\DOMException $dex) {
-				throw new XlsxFastEditorXmlException("Error creating cell {$this->sheetNumber}/{$cellName}!", $dex->code, $dex);
-			}
+			$c = $dom->createElement('c');
 			if ($c === false) {
 				throw new XlsxFastEditorXmlException("Error creating cell {$this->sheetNumber}/{$cellName}!");
 			}

@@ -380,11 +380,7 @@ final class XlsxFastEditor
 			if ($sheetDatas->length > 0) {
 				$sheetData = $sheetDatas[0];
 				if ($sheetData instanceof \DOMElement) {
-					try {
-						$sheetCalcPr = $dom->createElement('sheetCalcPr');
-					} catch (\DOMException $dex) {
-						throw new XlsxFastEditorXmlException("Error creating XML fragment for setFullCalcOnLoad!", $dex->code, $dex);
-					}
+					$sheetCalcPr = $dom->createElement('sheetCalcPr');
 					if ($sheetCalcPr !== false && $sheetData->parentNode !== null) {
 						if ($sheetData->nextSibling === null) {
 							$sheetData->parentNode->appendChild($sheetCalcPr);
@@ -465,11 +461,7 @@ final class XlsxFastEditor
 					if (!($sheetData instanceof \DOMElement)) {
 						throw new XlsxFastEditorXmlException("Error querying XML fragment for worksheet {$sheetNumber}!");
 					}
-					try {
-						$row = $xpath->document->createElement('row');
-					} catch (\DOMException $dex) {
-						throw new XlsxFastEditorXmlException("Error creating row {$sheetNumber}/{$rowNumber}!", $dex->code, $dex);
-					}
+					$row = $xpath->document->createElement('row');
 					if ($row === false) {
 						throw new XlsxFastEditorXmlException("Error creating row {$sheetNumber}/{$rowNumber}!");
 					}
@@ -1074,30 +1066,23 @@ final class XlsxFastEditor
 			throw new XlsxFastEditorXmlException('Invalid shared strings!');
 		}
 
-		try {
-			$si = $dom->createElement('si');
-		} catch (\DOMException $dex) {
-			throw new XlsxFastEditorXmlException('Error creating <si> in shared strings!', $dex->code, $dex);
-		}
+		$si = $dom->createElement('si');
 		if ($si === false) {
 			throw new XlsxFastEditorXmlException('Error creating <si> in shared strings!');
 		}
 
-		try {
-			// First, we create an empty element t
-			$t = $dom->createElement('t');
-			if ($t === false) {
-				throw new XlsxFastEditorXmlException('Failed to create <t> element');
-			}
-			// Add content as a text node
-			$textNode = $dom->createTextNode($value);
-			if ($textNode === false) {
-				throw new XlsxFastEditorXmlException('Failed to create <t> text node');
-			}
-			$t->appendChild($textNode);
-		} catch (\DOMException $dex) {
-			throw new XlsxFastEditorXmlException('Error creating <t> in shared strings!', $dex->code, $dex);
+		// First, we create an empty element t
+		$t = $dom->createElement('t');
+		if ($t === false) {
+			throw new XlsxFastEditorXmlException('Failed to create <t> element');
 		}
+		// Add content as a text node
+		$textNode = $dom->createTextNode($value);
+		if ($textNode === false) {
+			throw new XlsxFastEditorXmlException('Failed to create <t> text node');
+		}
+		$t->appendChild($textNode);
+
 		$si->appendChild($t);
 		if (!($dom->firstElementChild instanceof \DOMElement)) {
 			throw new XlsxFastEditorXmlException('Invalid shared strings!');

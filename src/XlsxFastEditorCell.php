@@ -263,11 +263,7 @@ final class XlsxFastEditorCell
 		}
 		if ($v === null) {
 			// There was no existing <v>
-			try {
-				$v = $this->c->ownerDocument === null ? null : $this->c->ownerDocument->createElement('v');
-			} catch (\DOMException $dex) {
-				throw new XlsxFastEditorXmlException("Error creating value for cell {$this->name()}!", $dex->code, $dex);
-			}
+			$v = $this->c->ownerDocument === null ? null : $this->c->ownerDocument->createElement('v');
 			if ($v == false) {
 				throw new XlsxFastEditorXmlException("Error creating value for cell {$this->name()}!");
 			}
@@ -306,21 +302,18 @@ final class XlsxFastEditorCell
 		if ($dom === null) {
 			throw new XlsxFastEditorXmlException("Internal error accessing cell {$this->name()}!");
 		}
-		try {
-			// First, we create an empty element t
-			$f = $dom->createElement('f');
-			if ($f === false) {
-				throw new XlsxFastEditorXmlException("Error creating DOMElement of formula for cell {$this->name()}!");
-			}
-			// Add content as a text node
-			$textNode = $dom->createTextNode($value);
-			if ($textNode === false) {
-				throw new XlsxFastEditorXmlException("Error creating text node of formula for cell {$this->name()}!");
-			}
-			$f->appendChild($textNode);
-		} catch (\DOMException $dex) {
-			throw new XlsxFastEditorXmlException("Error creating formula for cell {$this->name()}!", $dex->code, $dex);
+
+		// First, we create an empty element t
+		$f = $dom->createElement('f');
+		if ($f === false) {
+			throw new XlsxFastEditorXmlException("Error creating DOMElement of formula for cell {$this->name()}!");
 		}
+		// Add content as a text node
+		$textNode = $dom->createTextNode($value);
+		if ($textNode === false) {
+			throw new XlsxFastEditorXmlException("Error creating text node of formula for cell {$this->name()}!");
+		}
+		$f->appendChild($textNode);
 
 		$this->c->appendChild($f);
 
