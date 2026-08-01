@@ -157,7 +157,7 @@ final class XlsxFastEditor
 		}
 
 		$xml = $this->zip->getFromName($path);
-		if ($xml === false) {
+		if ($xml === false || $xml === '') {
 			throw new XlsxFastEditorFileFormatException("Missing XML fragment {$path}!");
 		}
 
