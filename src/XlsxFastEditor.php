@@ -108,6 +108,7 @@ final class XlsxFastEditor
 	 * @param bool $close Automatically close the underlying document archive (see `XlsxFastEditor::close()`)
 	 * @throws XlsxFastEditorZipException
 	 * @throws XlsxFastEditorXmlException
+	 * @throws \DOMException
 	 */
 	public function save(bool $close = true): void
 	{
@@ -366,6 +367,7 @@ final class XlsxFastEditor
 	 * @param int $sheetNumber Worksheet number (base 1)
 	 * @throws XlsxFastEditorFileFormatException
 	 * @throws XlsxFastEditorXmlException
+	 * @throws \DOMException
 	 */
 	public function setFullCalcOnLoad(int $sheetNumber, bool $value): void
 	{
@@ -433,6 +435,7 @@ final class XlsxFastEditor
 	 * @throws XlsxFastEditorFileFormatException
 	 * @throws XlsxFastEditorInputException optionally if the corresponding cell does not exist, depending on choice of `$accessMode`
 	 * @throws XlsxFastEditorXmlException
+	 * @throws \DOMException
 	 */
 	public function getRow(int $sheetNumber, int $rowNumber, int $accessMode = XlsxFastEditor::ACCESS_MODE_NULL): ?XlsxFastEditorRow
 	{
@@ -940,6 +943,7 @@ final class XlsxFastEditor
 	 * @throws \InvalidArgumentException if `$cellName` has an invalid format
 	 * @throws XlsxFastEditorFileFormatException
 	 * @throws XlsxFastEditorXmlException
+	 * @throws \DOMException
 	 */
 	public function _setHyperlink(int $sheetNumber, string $rId, string $value): bool
 	{
@@ -1058,6 +1062,7 @@ final class XlsxFastEditor
 	 * @return int the ID of the new shared string.
 	 * @throws XlsxFastEditorFileFormatException
 	 * @throws XlsxFastEditorXmlException
+	 * @throws \DOMException
 	 */
 	public function _makeNewSharedString(string $value): int
 	{
