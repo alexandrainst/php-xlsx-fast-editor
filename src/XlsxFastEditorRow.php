@@ -132,6 +132,7 @@ final class XlsxFastEditorRow
 	 * @throws \InvalidArgumentException if `$cellName` has an invalid format
 	 * @throws XlsxFastEditorInputException optionally if the corresponding cell does not exist, depending on choice of `$accessMode`
 	 * @throws XlsxFastEditorXmlException
+	 * @throws \DOMException
 	 */
 	public function getCell(string $cellName, int $accessMode = XlsxFastEditor::ACCESS_MODE_NULL): ?XlsxFastEditorCell
 	{
