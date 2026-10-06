@@ -49,6 +49,12 @@ final class XlsxFastEditor
 	private bool $mustClearCalcChain = false;
 
 	/**
+	 * Workbook date system.
+	 * @var 1900|1904|null
+	 */
+	private ?int $baseYear = null;
+
+	/**
 	 * @throws XlsxFastEditorZipException
 	 */
 	public function __construct(string $filename)
@@ -195,17 +201,16 @@ final class XlsxFastEditor
 	 */
 	public function getWorkbookDateSystem(): int
 	{
-		static $baseYear = 0;
-		if ($baseYear === 0) {
+		if ($this->baseYear === null) {
 			$xpath = $this->getXPathFromPath(self::WORKBOOK_PATH);
 			$date1904 = $xpath->evaluate('normalize-space(/o:workbook/o:workbookPr/@date1904)');
 			if (is_string($date1904) && in_array(strtolower(trim($date1904)), ['true', '1'], true)) {
-				$baseYear = 1904;
+				$this->baseYear = 1904;
 			} else {
-				$baseYear = 1900;
+				$this->baseYear = 1900;
 			}
 		}
-		return $baseYear;
+		return $this->baseYear;
 	}
 
 	/**
