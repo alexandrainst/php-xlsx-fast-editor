@@ -572,7 +572,12 @@ final class XlsxFastEditor
 			if (!($r instanceof \DOMElement) || $r->parentNode === null) {
 				throw new XlsxFastEditorXmlException("Error querying XML fragment for row {$sheetNumber} of worksheet {$sheetNumber}!");
 			}
-			return $r->parentNode->removeChild($r) != false;
+			$removed = $r->parentNode->removeChild($r);
+			if ($removed instanceof \DOMElement) {
+				$this->_touchWorksheet($sheetNumber);
+				return true;
+			}
+			return false;
 		}
 		return false;
 	}
