@@ -60,9 +60,11 @@ final class XlsxFastEditor
 	public function __construct(string $filename)
 	{
 		$this->zip = new \ZipArchive();
-		$zipCode = $this->zip->open($filename, \ZipArchive::CREATE);
+		// The workbook must already exist
+		$zipCode = $this->zip->open($filename);
 		if ($zipCode !== true) {
-			throw new XlsxFastEditorZipException("Cannot open workbook {$filename}!", $zipCode);
+			$message = $zipCode === \ZipArchive::ER_NOENT ? "Workbook {$filename} not found!" : "Cannot open workbook {$filename}!";
+			throw new XlsxFastEditorZipException($message, $zipCode);
 		}
 	}
 
