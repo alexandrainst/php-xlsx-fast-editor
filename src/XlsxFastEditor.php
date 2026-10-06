@@ -328,7 +328,8 @@ final class XlsxFastEditor
 	{
 		$xpath = $this->getXPathFromPath(self::WORKBOOK_PATH);
 		$xpath->registerNamespace('r', 'http://schemas.openxmlformats.org/officeDocument/2006/relationships');
-		$rId = $xpath->evaluate("normalize-space(/o:workbook/o:sheets/o:sheet[@name='$sheetName'][1]/@r:id)");
+		$quotedSheetName = self::quoteXPathString($sheetName);
+		$rId = $xpath->evaluate("normalize-space(/o:workbook/o:sheets/o:sheet[@name=$quotedSheetName][1]/@r:id)");
 		if (!is_string($rId) || $rId === '') {
 			return -1;
 		}
@@ -336,7 +337,8 @@ final class XlsxFastEditor
 		try {
 			$xpath = $this->getXPathFromPath(self::WORKBOOK_RELS_PATH);
 			$xpath->registerNamespace('pr', 'http://schemas.openxmlformats.org/package/2006/relationships');
-			$target = $xpath->evaluate("normalize-space(/pr:Relationships/pr:Relationship[@Id='$rId'][1]/@Target)");
+			$quotedRId = self::quoteXPathString($rId);
+			$target = $xpath->evaluate("normalize-space(/pr:Relationships/pr:Relationship[@Id=$quotedRId][1]/@Target)");
 			if (is_string($target) && preg_match('/(\d+)/i', $target, $matches)) {
 				return (int)$matches[1];
 			}
@@ -366,6 +368,22 @@ final class XlsxFastEditor
 	private static function getWorksheetPath(int $sheetNumber): string
 	{
 		return "xl/worksheets/sheet{$sheetNumber}.xml";
+	}
+
+	/**
+	 * Build an XPath string literal safely for any input
+	 * @param string $value Any arbitrary string.
+	 * @return string An XPath 1.0 string literal, ready to be interpolated in an XPath expression.
+	 */
+	private static function quoteXPathString(string $value): string
+	{
+		if (!str_contains($value, "'")) {
+			return "'" . $value . "'";
+		}
+		if (!str_contains($value, '"')) {
+			return '"' . $value . '"';
+		}
+		return "concat('" . str_replace("'", "', \"'\", '", $value) . "')";
 	}
 
 	/**
