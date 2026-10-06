@@ -162,6 +162,7 @@ final class XlsxFastEditorCell
 	/**
 	 * Read the date/time value of the cell, if any.
 	 * @return \DateTimeImmutable|null a date if the cell exists and contains a number, `null` otherwise.
+	 * @throws \Exception
 	 * @throws XlsxFastEditorFileFormatException
 	 * @throws XlsxFastEditorXmlException
 	 */
@@ -240,6 +241,7 @@ final class XlsxFastEditorCell
 	/**
 	 * Clean the cell to have its value written.
 	 * @return \DOMElement The `<v>` value element of the provided cell, or `null` in case of error.
+	 * @throws \DOMException
 	 * @throws XlsxFastEditorXmlException
 	 */
 	private function initCellValue(): \DOMElement
@@ -325,6 +327,7 @@ final class XlsxFastEditorCell
 	 * Write a number, without changing the type/style of the cell.
 	 * Removes the formulas of the cell, if any.
 	 * @param int|float $value
+	 * @throws \DOMException
 	 * @throws XlsxFastEditorXmlException
 	 */
 	private function writeNumber($value): void
@@ -343,6 +346,7 @@ final class XlsxFastEditorCell
 	 * Write a float, without changing the type/style of the cell.
 	 * Removes the formulas of the cell, if any.
 	 * @param float $value
+	 * @throws \DOMException
 	 * @throws XlsxFastEditorXmlException
 	 */
 	public function writeFloat(float $value): void
@@ -354,6 +358,7 @@ final class XlsxFastEditorCell
 	 * Write the date/time value of the cell, without changing the type/style of the cell.
 	 * Removes the formulas of the cell, if any.
 	 * @param \DateTimeInterface $value
+	 * @throws \DOMException
 	 * @throws \InvalidArgumentException
 	 * @throws XlsxFastEditorFileFormatException
 	 * @throws XlsxFastEditorXmlException
@@ -368,6 +373,7 @@ final class XlsxFastEditorCell
 	 * Write an integer, without changing the type/style of the cell.
 	 * Removes the formulas of the cell, if any.
 	 * @param int $value
+	 * @throws \DOMException
 	 * @throws XlsxFastEditorXmlException
 	 */
 	public function writeInt(int $value): void
@@ -378,6 +384,7 @@ final class XlsxFastEditorCell
 	/**
 	 * Write a string, without changing the type/style of the cell.
 	 * Removes the formulas of the cell, if any.
+	 * @throws \DOMException
 	 * @throws XlsxFastEditorFileFormatException
 	 * @throws XlsxFastEditorXmlException
 	 */
@@ -394,6 +401,7 @@ final class XlsxFastEditorCell
 	 * Replace the hyperlink of the cell, if that cell already has an hyperlink.
 	 * Warning: does not support the creation of a new hyperlink.
 	 * @return bool True if the hyperlink could be replaced, false otherwise.
+	 * @throws \DOMException
 	 * @throws XlsxFastEditorFileFormatException
 	 * @throws XlsxFastEditorXmlException
 	 */

@@ -129,6 +129,7 @@ final class XlsxFastEditorRow
 	 * @return XlsxFastEditorCell|null A cell, potentially `null` if the cell does not exist and `$accessMode` is set to `XlsxFastEditor::ACCESS_MODE_NULL`
 	 * @phpstan-return ($accessMode is XlsxFastEditor::ACCESS_MODE_NULL ? XlsxFastEditorCell|null : XlsxFastEditorCell)
 	 * @internal
+	 * @throws \DOMException
 	 * @throws \InvalidArgumentException if `$cellName` has an invalid format
 	 * @throws XlsxFastEditorInputException optionally if the corresponding cell does not exist, depending on choice of `$accessMode`
 	 * @throws XlsxFastEditorXmlException
@@ -196,6 +197,7 @@ final class XlsxFastEditorRow
 	 *
 	 * @param string $cellName Column name such as `'B'` or full cell name such as `'B4'`
 	 * @return XlsxFastEditorCell|null A cell, potentially `null` if the cell does not exist
+	 * @throws \DOMException
 	 * @throws \InvalidArgumentException if `$cellName` has an invalid format
 	 * @throws XlsxFastEditorXmlException
 	 */
@@ -213,6 +215,7 @@ final class XlsxFastEditorRow
 	 * Get the cell of the given name, or autocreate it if it does not already exist.
 	 * @param string $cellName Column name such as `'B'` or full cell name such as `'B4'`
 	 * @return XlsxFastEditorCell A cell
+	 * @throws \DOMException
 	 * @throws \InvalidArgumentException if `$cellName` has an invalid format
 	 * @throws XlsxFastEditorXmlException
 	 */
